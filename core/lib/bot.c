@@ -49,18 +49,16 @@ static struct buffer *buffers;
 static int n_buffers;
 static char *match;
 
-#if 0
-static int find_buffer_id(char *name) {
+int quassel_find_buffer_id(char *name, uint32_t network) {
 	int i;
 	for(i=0;i<n_buffers;++i) {
 		if(buffers[i].i.id==(uint32_t)-1)
 			continue;
-		if(strcmp(buffers[i].i.name, name)==0)
+		if(strcmp(buffers[i].i.name, name)==0 && buffers[i].i.network == network)
 			return i;
 	}
 	return -1;
 }
-#endif
 
 void irssi_send_message(GIOChannel* h, int buffer, char *message) {
 	send_message(h, buffers[buffer].i, message);

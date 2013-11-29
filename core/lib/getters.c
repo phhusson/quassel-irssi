@@ -154,6 +154,9 @@ void get_variant_t(char **buf, int type) {
 		case 11:
 			get_stringlist(buf);
 			break;
+		case 12:
+			get_bytearray(buf);
+			break;
 		case 16:
 			get_date(buf);
 			break;
@@ -166,11 +169,16 @@ void get_variant_t(char **buf, int type) {
 					get_map(buf);
 				} else if(strcmp(usertype, "BufferInfo")==0) {
 					get_bufferinfo(buf);
+				} else if(strcmp(usertype, "Network::Server")==0) {
+					get_map(buf);
 				} else {
 					printf("Unsupported usertype = %s (%d)\n", usertype, __LINE__);
 					abort();
 				}
 			}
+			break;
+		case 133:
+			get_short(buf);
 			break;
 		default:
 			abort();

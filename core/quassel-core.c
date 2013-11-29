@@ -11,12 +11,19 @@
 #include <queries.h>
 #include <recode.h>
 #include <servers-setup.h>
+#include <nicklist.h>
 #include <servers.h>
 #include <settings.h>
 #include <signals.h>
 
 static CHATNET_REC *create_chatnet(void) {
     return g_new0(CHATNET_REC, 1);
+}
+
+char *channame(int net, char *buf) {
+	char *ret = NULL;
+	asprintf(&ret, "%d-%s", net, buf);
+	return ret;
 }
 
 static SERVER_SETUP_REC *create_server_setup(void) {
@@ -42,6 +49,13 @@ typedef struct Quassel_CHANNEL_REC_s {
 	int buffer_id;
 } Quassel_CHANNEL_REC;
 
+#define STRUCT_SERVER_REC struct Quassel_SERVER_REC_s 
+#define STRUCT_QUERY_REC struct Quassel_QUERY_REC_s 
+typedef struct Quassel_QUERY_REC_s {
+#include <irssi/src/core/query-rec.h>
+	int buffer_id;
+} Quassel_QUERY_REC;
+
 #define Quassel_PROTOCOL (chat_protocol_lookup("Quassel"))
 
 static SERVER_CONNECT_REC * create_server_connect(void) {
@@ -65,6 +79,8 @@ CHANNEL_REC *quassel_channel_create(SERVER_REC *server, const char *name,
 
 	channel_init((CHANNEL_REC *) rec, (SERVER_REC *) server,
 		     name, visible_name, automatic);
+	rec->buffer_id = -1;
+
 	return (CHANNEL_REC*)rec;
 }
 
@@ -82,13 +98,48 @@ void quassel_server_connect(SERVER_REC *server) {
 }
 
 QUERY_REC* quassel_query_create(const char *server_tag, const char* nick, int automatic) {
-	QUERY_REC *rec = g_new0(QUERY_REC, 1);
+	Quassel_QUERY_REC *rec = g_new0(Quassel_QUERY_REC, 1);
 	rec->chat_type = Quassel_PROTOCOL;
 	rec->name = g_strdup(nick);
 	rec->server_tag = g_strdup(server_tag);
-	query_init(rec, automatic);
+	query_init((QUERY_REC*)rec, automatic);
 
-	return rec;
+	return (QUERY_REC*)rec;
+}
+
+void quassel_irssi_join(void* arg, char* network,
+		char *chan, char* nick,
+		char* mode) {
+	char *_chan = channame(atoi(network), chan);
+	Quassel_CHANNEL_REC* chan_rec = (Quassel_CHANNEL_REC*) channel_find(SERVER(arg), _chan);
+	if(!chan_rec)
+		return;
+
+	NICK_REC* rec = g_new0(NICK_REC, 1);
+	rec->nick = g_strdup(nick);
+	for(int i=0; mode[i]; ++i) {
+		if(mode[i] == 'o')
+			rec->op = 1;
+		if(mode[i] == 'v')
+			rec->voice = 1;
+
+		if(rec->op)
+			rec->prefixes[0] = '@';
+		else if(rec->voice)
+			rec->prefixes[0] = '+';
+	}
+	nicklist_insert(CHANNEL(chan_rec), rec);
+
+	free(_chan);
+}
+
+void quassel_irssi_joined(void* arg, char* network, char *chan) {
+	char *_chan = channame(atoi(network), chan);
+	Quassel_CHANNEL_REC* chan_rec = (Quassel_CHANNEL_REC*) channel_find(SERVER(arg), _chan);
+	if(!chan_rec) goto end;
+	signal_emit("channel joined", 1, chan_rec);
+end:
+	free(_chan);
 }
 
 extern void quassel_init_packet(GIOChannel*);
@@ -118,12 +169,6 @@ static void quassel_parse_incoming(Quassel_SERVER_REC* r) {
 	server_unref((SERVER_REC*)r);
 }
 
-char *channame(int net, char *buf) {
-	char *ret = NULL;
-	asprintf(&ret, "%d-%s", net, buf);
-	return ret;
-}
-
 void irssi_quassel_handle(Quassel_SERVER_REC* r, int bufferid, int network, char* buffer_id, char* sender, int type, int flags, char* content) {
 	(void)flags;
 	char *chan = channame(network, buffer_id);
@@ -132,6 +177,26 @@ void irssi_quassel_handle(Quassel_SERVER_REC* r, int bufferid, int network, char
 	if( (t=index(nick, '!')) != NULL)
 		*t = 0;
 	//Text message
+	/*
+	   Plain(0x00001),                                                            
+	   Notice(0x00002),                                                           
+	   Action(0x00004),                                                           
+	   Nick(0x00008),                                                             
+	   Mode(0x00010),                                                             
+	   Join(0x00020),                                                             
+	   Part(0x00040),                                                             
+	   Quit(0x00080),                                                             
+	   Kick(0x00100),                                                             
+	   Kill(0x00200),                                                             
+	   Server(0x00400),                                                           
+	   Info(0x00800),                                                             
+	   Error(0x01000),                                                            
+	   DayChange(0x02000),                                                        
+	   Topic(0x04000),                                                            
+	   NetsplitJoin(0x08000),                                                     
+	   NetsplitQuit(0x10000),                                                     
+	   Invite(0x20000);
+	*/
 	if(type == 1) {
 		char *recoded;
 		Quassel_CHANNEL_REC* chan_rec = (Quassel_CHANNEL_REC*) channel_find(SERVER(r), chan);
@@ -175,6 +240,52 @@ static void sig_connected(Quassel_SERVER_REC* r) {
 	quassel_init_packet(net_sendbuffer_handle(r->handle));
 }
 
+static void channel_change_topic(SERVER_REC *server, const char *channel,
+				 const char *topic, const char *setby,
+				 time_t settime)
+{
+	CHANNEL_REC *chanrec;
+	char *recoded = NULL;
+	
+	chanrec = channel_find(SERVER(server), channel);
+	if (chanrec == NULL) {
+		chanrec = quassel_channel_create(server, channel, channel, 0);
+	}
+	/* the topic may be send out encoded, so we need to 
+	   recode it back or /topic <tab> will not work properly */
+	recoded = recode_in(SERVER(server), topic, channel);
+	if (topic != NULL) {
+		g_free_not_null(chanrec->topic);
+		chanrec->topic = recoded == NULL ? NULL : g_strdup(recoded);
+	}
+	g_free(recoded);
+
+	g_free_not_null(chanrec->topic_by);
+	chanrec->topic_by = g_strdup(setby);
+	
+	chanrec->topic_time = settime;
+
+	signal_emit("channel topic changed", 1, chanrec);
+}
+
+extern int quassel_find_buffer_id(char *name, int network);
+void quassel_irssi_topic(SERVER_REC* server, char* network, char *chan, char *topic) {
+	char *s = NULL;
+	asprintf(&s, "%s-%s", network, chan);
+	channel_change_topic(server, s, topic, "", time(NULL));
+	Quassel_CHANNEL_REC* chanrec = (Quassel_CHANNEL_REC*)channel_find(SERVER(server), s);
+	free(s);
+	if(!chanrec)
+		return;
+	if(chanrec->buffer_id == -1)
+		chanrec->buffer_id = quassel_find_buffer_id(chan, atoi(network));
+}
+
+static const char *get_nick_flags(SERVER_REC *server) {
+	(void)server;
+	return "";
+}
+
 extern void quassel_user_pass(char *user, char *pass);
 SERVER_REC* quassel_server_init_connect(SERVER_CONNECT_REC* conn) {
 	Quassel_SERVER_CONNECT_REC *r = (Quassel_SERVER_CONNECT_REC*) conn;
@@ -195,6 +306,13 @@ SERVER_REC* quassel_server_init_connect(SERVER_CONNECT_REC* conn) {
 
 	ret->channels_join = quassel_channels_join;
 	ret->send_message = send_message;
+	ret->get_nick_flags = get_nick_flags;
+	auto int ischannel(SERVER_REC* server, const char* chan) {
+		(void) server;
+		(void) chan;
+		return 0;
+	}
+	ret->ischannel = ischannel;
 	quassel_user_pass(conn->nick, conn->password);
 
 	server_connect_init((SERVER_REC*)ret);
@@ -234,6 +352,6 @@ void quassel_core_init(void) {
 }
 
 void quassel_core_deinit(void) {
+	signal_emit("chat protocol deinit", 1, chat_protocol_find("Quassel"));
 	chat_protocol_unregister("Quassel");
-	signal_emit("chat protocol deinit", 1, Quassel_PROTOCOL);
 }

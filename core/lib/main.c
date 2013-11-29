@@ -15,6 +15,7 @@
    along with QuasselC.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define _GNU_SOURCE
 #include <glib.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -34,6 +35,56 @@ static char* login;
 static char* pass;
 
 void irssi_handle_connected(void*);
+
+extern void quassel_irssi_topic(void *arg, char *network, char *chan, char *topic);
+extern void quassel_irssi_join(void* arg, char* network, char *chan, char* nick, char* mode);
+extern void quassel_irssi_joined(void* arg, char* network, char *chan);
+
+void handle_irc_users_and_channels(void *arg, char** buf, char *network) {
+	if(get_qvariant(buf) != 8)
+		return;
+	int len = get_int(buf);
+	for(int i=0; i<len; ++i) {
+
+		char *key = get_string(buf);
+		if(strcmp(key, "channels")==0) {
+			if(get_qvariant(buf) != 8)
+				return;
+			int len = get_int(buf);
+			for(int i=0; i<len; ++i) {
+				char *channame = g_strdup(get_string(buf));
+				if(get_qvariant(buf) != 8)
+					return;
+				int len = get_int(buf);
+				for(int i=0; i<len; ++i) {
+					char *key = get_string(buf);
+					if(strcmp(key, "topic")==0) {
+						if(get_qvariant(buf) != 10)
+							return;
+						char *topic = get_string(buf);
+						quassel_irssi_topic(arg, network, channame, topic);
+					} else if(strcmp(key, "UserModes") == 0) {
+						if(get_qvariant(buf) != 8)
+							return;
+						int len = get_int(buf);
+						for(int i=0; i<len; ++i) {
+							char *key = get_string(buf);
+							int type = get_qvariant(buf);
+							if(type != 10)
+								return;
+							char *modes = get_string(buf);
+							quassel_irssi_join(arg, network, channame, key, modes);
+						}
+					} else
+						get_variant(buf);
+				}
+				quassel_irssi_joined(arg, network, channame);
+				free(channame);
+			}
+		} else
+			get_variant(buf);
+	}
+}
 
 int parse_message(GIOChannel* h, char *buf, void* arg) {
 	int type=get_qvariant(&buf);
@@ -396,7 +447,9 @@ int parse_message(GIOChannel* h, char *buf, void* arg) {
 							}
 							return 0;
 						}
-					} else
+					} else if(strcmp("BufferViewConfig", cmd_str)==0) {
+						//ignore...
+					}
 						printf("Got unknown sync object type:%s\n", cmd_str);
 				}
 				break;
@@ -626,6 +679,22 @@ int parse_message(GIOChannel* h, char *buf, void* arg) {
 							}
 						}
 						return 0;
+					} else if(strcmp(cmd_str, "Network")==0) {
+						if(get_qvariant(&buf) != 10)
+							return 1;
+						char *network_id = get_string(&buf);
+
+						if(get_qvariant(&buf) != 8)
+							return 1;
+						int len = get_int(&buf);
+						for(int i=0; i<len; ++i) {
+							char *varname = get_string(&buf);
+							if(strcmp(varname, "IrcUsersAndChannels") == 0) {
+								handle_irc_users_and_channels(arg, &buf, network_id);
+							} else
+								get_variant(&buf);
+						}
+						return 0;
 					}
 					return 1;
 				}
@@ -682,6 +751,29 @@ int parse_message(GIOChannel* h, char *buf, void* arg) {
 							get_bytearray(&buf);
 							struct bufferinfo m=get_bufferinfo(&buf);
 							handle_sync(BufferSyncer, Create, m.id, m.network, m.name);
+						}
+						continue;
+					} else if(strcmp(key2, "NetworkIds") == 0) {
+						//list
+						if(type2 != 9)
+							return 1;
+
+						int size = get_int(&buf);
+						for(int i=0; i<size; ++i) {
+							int type3 = get_qvariant(&buf);
+							//Sepcial object
+							if(type3 != 127)
+								return 1;
+							char *type_str = get_bytearray(&buf);
+							//NetworkId object
+							if(strcmp(type_str, "NetworkId"))
+								return 1;
+							//Contains only an int
+							int network_id = get_int(&buf);
+							char *s = NULL;
+							asprintf(&s, "%d", network_id);
+							initRequest(h, "Network", s);
+							free(s);
 						}
 						continue;
 					}
