@@ -52,7 +52,7 @@ void handle_irc_users_and_channels(void *arg, char** buf, char *network) {
 				return;
 			int len = get_int(buf);
 			for(int i=0; i<len; ++i) {
-				char *channame = g_strdup(get_string(buf));
+				char *channame = strdup(get_string(buf));
 				if(get_qvariant(buf) != 8)
 					return;
 				int len = get_int(buf);
@@ -449,7 +449,7 @@ int parse_message(GIOChannel* h, char *buf, void* arg) {
 						}
 					} else if(strcmp("BufferViewConfig", cmd_str)==0) {
 						//ignore...
-					}
+					} else
 						printf("Got unknown sync object type:%s\n", cmd_str);
 				}
 				break;

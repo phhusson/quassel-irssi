@@ -204,7 +204,7 @@ void irssi_quassel_handle(Quassel_SERVER_REC* r, int bufferid, int network, char
 			chan_rec = (Quassel_CHANNEL_REC*) quassel_channel_create(SERVER(r), chan, chan, 0);
 		chan_rec->buffer_id = bufferid;
 		recoded = recode_in(SERVER(r), content, chan);
-		if(strcmp(sender, "phh") == 0) {
+		if(strcmp(sender, SERVER(r)->nick) == 0) {
 			signal_emit("message own_public", 5,
 				r, recoded, sender, "coin", chan);
 		} else {
@@ -261,6 +261,7 @@ static void channel_change_topic(SERVER_REC *server, const char *channel,
 	g_free(recoded);
 
 	g_free_not_null(chanrec->topic_by);
+	g_free_not_null(chanrec->topic_by);
 	chanrec->topic_by = g_strdup(setby);
 	
 	chanrec->topic_time = settime;
@@ -301,8 +302,6 @@ SERVER_REC* quassel_server_init_connect(SERVER_CONNECT_REC* conn) {
 
 	ret->connrec->use_ssl = 0;
 	ret->connrec->port = 443;
-	ret->connrec->nick = g_strdup("phh");
-	ret->connrec->realname = g_strdup("toto");
 
 	ret->channels_join = quassel_channels_join;
 	ret->send_message = send_message;
