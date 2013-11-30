@@ -264,6 +264,8 @@ static void send_message(SERVER_REC *server, const char *target,
 }
 
 static void sig_connected(Quassel_SERVER_REC* r) {
+	if(!PROTO_CHECK_CAST(SERVER(r), Quassel_SERVER_REC, chat_type, "Quassel"))
+		return;
 	r->readtag =
 		g_input_add(net_sendbuffer_handle(r->handle),
 			    G_INPUT_READ,
