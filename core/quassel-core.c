@@ -210,8 +210,7 @@ void irssi_quassel_handle(Quassel_SERVER_REC* r, int bufferid, int network, char
 		chan_rec->buffer_id = bufferid;
 		recoded = recode_in(SERVER(r), content, chan);
 		if(strcmp(sender, SERVER(r)->nick) == 0) {
-			signal_emit("message own_public", 5,
-				r, recoded, sender, "coin", chan);
+			signal_emit("message own_public", 4, r, recoded, chan, NULL);
 		} else {
 			signal_emit("message public", 5,
 				r, recoded, nick, "coin", chan);
@@ -271,6 +270,19 @@ static void sig_connected(Quassel_SERVER_REC* r) {
 			    G_INPUT_READ,
 			    (GInputFunction) quassel_parse_incoming, r);
 	quassel_init_packet(net_sendbuffer_handle(r->handle));
+}
+
+static void sig_own_public(SERVER_REC *server, const char *msg, const char *channel,
+	const char *orig_target) {
+	(void) msg;
+	(void) channel;
+	if(!PROTO_CHECK_CAST(SERVER(server), Quassel_SERVER_REC, chat_type, "Quassel"))
+		return;
+	if(orig_target != NULL) {
+		//own_public message sent from /msg command
+		signal_stop();
+		return;
+	}
 }
 
 static void channel_change_topic(SERVER_REC *server, const char *channel,
@@ -381,6 +393,7 @@ void quassel_core_init(void) {
     module_register("quassel", "core");
 
 	signal_add_first("server connected", (SIGNAL_FUNC) sig_connected);
+	signal_add_first("message own_public", (SIGNAL_FUNC) sig_own_public);
 }
 
 void quassel_core_deinit(void) {
