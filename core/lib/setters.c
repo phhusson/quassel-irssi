@@ -33,7 +33,7 @@ static void __init() {
 
 char *convert_string(char *str, int* size) {
 	size_t s1,s2;
-	static char buf[512];
+	static char buf[2048];
 	char *pos=buf;
 	bzero(buf, sizeof(buf));
 	s1=strlen(str);

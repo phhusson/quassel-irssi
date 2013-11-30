@@ -107,10 +107,8 @@ QUERY_REC* quassel_query_create(const char *server_tag, const char* nick, int au
 	return (QUERY_REC*)rec;
 }
 
-void quassel_irssi_join(void* arg, char* network,
-		char *chan, char* nick,
+void quassel_irssi_join2(void* arg, char* _chan, char* nick,
 		char* mode) {
-	char *_chan = channame(atoi(network), chan);
 	Quassel_CHANNEL_REC* chan_rec = (Quassel_CHANNEL_REC*) channel_find(SERVER(arg), _chan);
 	if(!chan_rec)
 		return;
@@ -129,7 +127,13 @@ void quassel_irssi_join(void* arg, char* network,
 			rec->prefixes[0] = '+';
 	}
 	nicklist_insert(CHANNEL(chan_rec), rec);
+}
 
+void quassel_irssi_join(void* arg, char* network,
+		char *chan, char* nick,
+		char* mode) {
+	char *_chan = channame(atoi(network), chan);
+	quassel_irssi_join2(arg, _chan, nick, mode);
 	free(_chan);
 }
 
@@ -173,9 +177,10 @@ void irssi_quassel_handle(Quassel_SERVER_REC* r, int bufferid, int network, char
 	(void)flags;
 	char *chan = channame(network, buffer_id);
 	char *nick = strdup(sender);
-	char *t;
-	if( (t=index(nick, '!')) != NULL)
-		*t = 0;
+	char *address;
+	if( (address=index(nick, '!')) != NULL)
+		*address = 0;
+	address++;
 	//Text message
 	/*
 	   Plain(0x00001),                                                            
@@ -212,6 +217,21 @@ void irssi_quassel_handle(Quassel_SERVER_REC* r, int bufferid, int network, char
 				r, recoded, nick, "coin", chan);
 		}
 		g_free(recoded);
+	} else if(type == 0x20) {
+		//Join
+		quassel_irssi_join2(r, chan, nick, "");
+
+		Quassel_CHANNEL_REC* chan_rec = (Quassel_CHANNEL_REC*) channel_find(SERVER(r), chan);
+		NICK_REC* nick_rec = nicklist_find((CHANNEL_REC*)chan_rec, nick);
+		signal_emit("nicklist new", 2, chan_rec, nick_rec);
+		signal_emit("message join", 4, SERVER(r), chan, nick, address);
+	} else if(type == 0x40) {
+		//part
+		signal_emit("message part", 5, SERVER(r), chan, nick, address, content);
+
+		Quassel_CHANNEL_REC* chan_rec = (Quassel_CHANNEL_REC*) channel_find(SERVER(r), chan);
+		NICK_REC* nick_rec = nicklist_find((CHANNEL_REC*)chan_rec, nick);
+		signal_emit("nicklist remove", 2, chan_rec, nick_rec);
 	}
 	free(chan);
 	free(nick);

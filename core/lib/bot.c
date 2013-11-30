@@ -172,7 +172,7 @@ void handle_sync(object_t o, function_t f, ...) {
 			if(size==0)
 				break;
 			if(size>1) {
-				printf("Too many users joined\n");
+				dprintf("Too many users joined\n");
 				break;
 			}
 			dprintf("JoinIrcUser(%s, %s, %s, %s)\n", net, chan, users[0], modes[0]);
