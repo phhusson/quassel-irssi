@@ -217,6 +217,16 @@ void irssi_quassel_handle(Quassel_SERVER_REC* r, int bufferid, int network, char
 				r, recoded, nick, "coin", chan);
 		}
 		g_free(recoded);
+	} else if(type == 0x08) {
+		//Nick
+		Quassel_CHANNEL_REC* chan_rec = (Quassel_CHANNEL_REC*) channel_find(SERVER(r), chan);
+		NICK_REC* nick_rec = nicklist_find((CHANNEL_REC*)chan_rec, nick);
+
+		//nick already renamed
+		if(!nick_rec)
+			goto end;
+		nicklist_rename(SERVER(r), nick, content);
+		signal_emit("message nick", 4, SERVER(r), content, nick, address);
 	} else if(type == 0x20) {
 		//Join
 		quassel_irssi_join2(r, chan, nick, "");
@@ -233,6 +243,7 @@ void irssi_quassel_handle(Quassel_SERVER_REC* r, int bufferid, int network, char
 		NICK_REC* nick_rec = nicklist_find((CHANNEL_REC*)chan_rec, nick);
 		signal_emit("nicklist remove", 2, chan_rec, nick_rec);
 	}
+end:
 	free(chan);
 	free(nick);
 }
