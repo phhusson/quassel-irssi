@@ -113,6 +113,8 @@ void irssi_quassel_handle(Quassel_SERVER_REC* r, int msg_id, int bufferid, int n
 			goto end;
 		nicklist_rename(SERVER(r), nick, content);
 		signal_emit("message nick", 4, SERVER(r), content, nick, address);
+	} else if(type == 0x10) {
+		//Change mode
 	} else if(type == 0x20) {
 		//Join
 		quassel_irssi_join2(r, chan, nick, "");
@@ -137,6 +139,12 @@ void irssi_quassel_handle(Quassel_SERVER_REC* r, int msg_id, int bufferid, int n
 			nicklist_remove(CHANNEL(channel), nickrec);
 		}
 		g_slist_free(nicks);
+	} else /*if(type == 0x400) */{
+		char *str = NULL;
+		asprintf(&str, "%d:%s:%s\n", type, sender, content);
+		chanrec->buffer_id = bufferid;
+		signal_emit("message public", 5,
+				r, str, "server", "coin", chan);
 	}
 
 	quassel_irssi_check_read(chanrec);
