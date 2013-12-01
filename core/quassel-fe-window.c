@@ -100,18 +100,6 @@ void quassel_irssi_set_last_seen_msg(void *arg, int buffer_id, int msgid) {
 		if(strcmp(winrec->active->visible_name, chanrec->name)==0) {
 				signal_emit("window dehilight", 1, winrec);
 		}
-#if 0
-		GSList *bound = winrec->bound_items;
-		while(bound) {
-			WINDOW_BIND_REC* bindrec = (WINDOW_BIND_REC*) bound->data;
-			fprintf(stderr, "%s VS %s\n", bindrec->name, chanrec->name);
-			if(strcmp(bindrec->name, chanrec->name) == 0) {
-	fprintf(stderr, "%s:%s:%d\n", __FILE__, __FUNCTION__, __LINE__);
-				signal_emit("window dehilight", 1, winrec);
-			}
-			bound = g_slist_next(bound);
-		}
-#endif
 
 next:
 		win = g_slist_next(win);
