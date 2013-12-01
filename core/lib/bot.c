@@ -92,9 +92,9 @@ char *stripname(char *str) {
 	return res;
 }
 
-extern void irssi_quassel_handle(void* arg, int buffer_id, int network, char* buf, char* sender, int type, int flags, char* content);
+extern void irssi_quassel_handle(void* arg, int msgid, int buffer_id, int network, char* buf, char* sender, int type, int flags, char* content);
 void handle_message(struct message m, void *arg) {
-	irssi_quassel_handle(arg, m.buffer.id, m.buffer.network, m.buffer.name, m.sender, m.type, m.flags, m.content);
+	irssi_quassel_handle(arg, m.id, m.buffer.id, m.buffer.network, m.buffer.name, m.sender, m.type, m.flags, m.content);
 }
 
 void handle_sync(object_t o, function_t f, ...) {

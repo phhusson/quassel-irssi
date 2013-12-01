@@ -28,6 +28,85 @@
 #include <common.h>
 #include <network.h>
 
+//Totally useless...
+//But still we'll do it
+void quassel_mark_as_read(GIOChannel* h, int buffer_id) {
+	char msg[2048];
+	int size = 0;
+	bzero(msg, sizeof(msg));
+
+	//A list
+	size += add_qvariant(msg+size, 9);
+	//5 elements
+	size += add_int(msg+size, 5);
+
+	//A sync operation
+	size += add_qvariant(msg+size, 2);
+	size += add_int(msg+size, 1);
+
+	//'BufferSyncer' bytearray
+	size += add_qvariant(msg+size, 12);
+	size += add_bytearray(msg+size, "BufferSyncer");
+
+	//Empty string
+	size += add_qvariant(msg+size, 10);
+	size += add_int(msg+size, 0xffffffff);
+
+	//'markBufferAsRead' bytearray
+	size += add_qvariant(msg+size, 12);
+	//size += add_bytearray(msg+size, "markBufferAsRead");
+	size += add_bytearray(msg+size, "requestMarkBufferAsRead");
+
+	//BufferId type
+	size += add_qvariant(msg+size, 127);
+	size += add_bytearray(msg+size, "BufferId");
+	size += add_int(msg+size, buffer_id);
+
+	uint32_t v = htonl(size);
+	net_transmit(h, (char*)&v, 4);
+	net_transmit(h, msg, size);
+}
+
+void quassel_set_last_seen_msg(GIOChannel* h, int buffer_id, int msg_id) {
+	char msg[2048];
+	int size = 0;
+	bzero(msg, sizeof(msg));
+
+	//A list
+	size += add_qvariant(msg+size, 9);
+	//5 elements
+	size += add_int(msg+size, 6);
+
+	//A sync operation
+	size += add_qvariant(msg+size, 2);
+	size += add_int(msg+size, 1);
+
+	//'BufferSyncer' bytearray
+	size += add_qvariant(msg+size, 12);
+	size += add_bytearray(msg+size, "BufferSyncer");
+
+	//Empty string
+	size += add_qvariant(msg+size, 10);
+	size += add_int(msg+size, 0xffffffff);
+
+	size += add_qvariant(msg+size, 12);
+	size += add_bytearray(msg+size, "requestSetLastSeenMsg");
+
+	//BufferId type
+	size += add_qvariant(msg+size, 127);
+	size += add_bytearray(msg+size, "BufferId");
+	size += add_int(msg+size, buffer_id);
+
+	//MsgId type
+	size += add_qvariant(msg+size, 127);
+	size += add_bytearray(msg+size, "MsgId");
+	size += add_int(msg+size, msg_id);
+
+	uint32_t v = htonl(size);
+	net_transmit(h, (char*)&v, 4);
+	net_transmit(h, msg, size);
+}
+
 void Login(GIOChannel* h, char *user, char *pass) {
 	//HeartBeat
 	char msg[2048];
@@ -48,7 +127,7 @@ void Login(GIOChannel* h, char *user, char *pass) {
 	elements++;
 
 	//The message will be of that length
-	uint32_t v=htonl(size+8);
+	uint32_t v=htonl(size+9);
 	net_transmit(h, (char*)&v, 4);
 	//This is a QMap
 	v=htonl(8);

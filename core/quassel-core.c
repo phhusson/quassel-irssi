@@ -16,6 +16,9 @@
 #include <settings.h>
 #include <signals.h>
 
+//fe-common/core
+#include <fe-windows.h>
+
 static CHATNET_REC *create_chatnet(void) {
     return g_new0(CHATNET_REC, 1);
 }
@@ -47,6 +50,7 @@ typedef struct Quassel_SERVER_REC_s {
 typedef struct Quassel_CHANNEL_REC_s {
 #include <irssi/src/core/channel-rec.h>
 	int buffer_id;
+	int last_msg_id;
 } Quassel_CHANNEL_REC;
 
 #define STRUCT_SERVER_REC struct Quassel_SERVER_REC_s 
@@ -173,7 +177,7 @@ static void quassel_parse_incoming(Quassel_SERVER_REC* r) {
 	server_unref((SERVER_REC*)r);
 }
 
-void irssi_quassel_handle(Quassel_SERVER_REC* r, int bufferid, int network, char* buffer_id, char* sender, int type, int flags, char* content) {
+void irssi_quassel_handle(Quassel_SERVER_REC* r, int msg_id, int bufferid, int network, char* buffer_id, char* sender, int type, int flags, char* content) {
 	(void)flags;
 	char *chan = channame(network, buffer_id);
 	char *nick = strdup(sender);
@@ -202,11 +206,12 @@ void irssi_quassel_handle(Quassel_SERVER_REC* r, int bufferid, int network, char
 	   NetsplitQuit(0x10000),                                                     
 	   Invite(0x20000);
 	*/
+	Quassel_CHANNEL_REC* chan_rec = (Quassel_CHANNEL_REC*) channel_find(SERVER(r), chan);
+	if(!chan_rec)
+		chan_rec = (Quassel_CHANNEL_REC*) quassel_channel_create(SERVER(r), chan, chan, 0);
+	chan_rec->last_msg_id = msg_id;
 	if(type == 1) {
 		char *recoded;
-		Quassel_CHANNEL_REC* chan_rec = (Quassel_CHANNEL_REC*) channel_find(SERVER(r), chan);
-		if(!chan_rec)
-			chan_rec = (Quassel_CHANNEL_REC*) quassel_channel_create(SERVER(r), chan, chan, 0);
 		chan_rec->buffer_id = bufferid;
 		recoded = recode_in(SERVER(r), content, chan);
 		if(strcmp(sender, SERVER(r)->nick) == 0) {
@@ -218,7 +223,6 @@ void irssi_quassel_handle(Quassel_SERVER_REC* r, int bufferid, int network, char
 		g_free(recoded);
 	} else if(type == 0x08) {
 		//Nick
-		Quassel_CHANNEL_REC* chan_rec = (Quassel_CHANNEL_REC*) channel_find(SERVER(r), chan);
 		NICK_REC* nick_rec = nicklist_find((CHANNEL_REC*)chan_rec, nick);
 
 		//nick already renamed
@@ -230,7 +234,6 @@ void irssi_quassel_handle(Quassel_SERVER_REC* r, int bufferid, int network, char
 		//Join
 		quassel_irssi_join2(r, chan, nick, "");
 
-		Quassel_CHANNEL_REC* chan_rec = (Quassel_CHANNEL_REC*) channel_find(SERVER(r), chan);
 		NICK_REC* nick_rec = nicklist_find((CHANNEL_REC*)chan_rec, nick);
 		signal_emit("nicklist new", 2, chan_rec, nick_rec);
 		signal_emit("message join", 4, SERVER(r), chan, nick, address);
@@ -283,6 +286,25 @@ static void sig_own_public(SERVER_REC *server, const char *msg, const char *chan
 		signal_stop();
 		return;
 	}
+}
+
+extern void quassel_mark_as_read(GIOChannel*, int);
+extern void quassel_set_last_seen_msg(GIOChannel*, int, int);
+static void sig_window_changed(WINDOW_REC *active, WINDOW_REC *old) {
+	(void) active;
+	if(!old)
+		return;
+	WI_ITEM_REC *wi = old->active;
+	if(!wi)
+		return;
+	Quassel_SERVER_REC *server = (Quassel_SERVER_REC*)wi->server;
+	if(!PROTO_CHECK_CAST(SERVER(server), Quassel_SERVER_REC, chat_type, "Quassel"))
+		return;
+	GIOChannel *giochan = net_sendbuffer_handle(server->handle);
+	Quassel_CHANNEL_REC *chanrec = (Quassel_CHANNEL_REC*) channel_find(SERVER(server), wi->visible_name);
+
+	quassel_set_last_seen_msg(giochan, chanrec->buffer_id, chanrec->last_msg_id);
+	quassel_mark_as_read(giochan, chanrec->buffer_id);
 }
 
 static void channel_change_topic(SERVER_REC *server, const char *channel,
@@ -394,6 +416,7 @@ void quassel_core_init(void) {
 
 	signal_add_first("server connected", (SIGNAL_FUNC) sig_connected);
 	signal_add_first("message own_public", (SIGNAL_FUNC) sig_own_public);
+	signal_add_first("window changed", (SIGNAL_FUNC) sig_window_changed);
 }
 
 void quassel_core_deinit(void) {
