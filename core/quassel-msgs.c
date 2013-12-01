@@ -125,7 +125,18 @@ void irssi_quassel_handle(Quassel_SERVER_REC* r, int msg_id, int bufferid, int n
 		signal_emit("message part", 5, SERVER(r), chan, nick, address, content);
 
 		NICK_REC* nick_rec = nicklist_find((CHANNEL_REC*)chanrec, nick);
-		signal_emit("nicklist remove", 2, chanrec, nick_rec);
+		nicklist_remove((CHANNEL_REC*)chanrec, nick_rec);
+	} else if(type == 0x80) {
+		//Quit
+		signal_emit("message quit", 4, SERVER(r), nick, address, content);
+
+		GSList *nicks = nicklist_get_same(SERVER(r), nick);
+		for (GSList *tmp = nicks; tmp != NULL; tmp = tmp->next->next) {
+			CHANNEL_REC* channel = tmp->data;
+			NICK_REC* nickrec = tmp->next->data;
+			nicklist_remove(CHANNEL(channel), nickrec);
+		}
+		g_slist_free(nicks);
 	}
 
 	quassel_irssi_check_read(chanrec);

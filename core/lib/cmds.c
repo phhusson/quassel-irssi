@@ -231,7 +231,7 @@ void initRequest(GIOChannel* h, char *val, char *arg) {
 	net_transmit(h, msg, size);
 }
 
-void requestBacklog(GIOChannel *h, int buffer, int first, int last, int limit, int additional) {
+void quassel_request_backlog(GIOChannel *h, int buffer, int first, int last, int limit, int additional) {
 	char msg[2048];
 	int size;
 	

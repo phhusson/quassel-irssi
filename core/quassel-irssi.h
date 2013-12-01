@@ -54,4 +54,8 @@ extern void quassel_msgs_init(void);
 
 //quassel-core.c
 CHANNEL_REC *quassel_channel_create(SERVER_REC *server, const char *name, const char *visible_name, int automatic);
+
+
+// lib
+void quassel_request_backlog(GIOChannel *h, int buffer, int first, int last, int limit, int additional);
 #endif /* QUASSEL_IRSSI_H */

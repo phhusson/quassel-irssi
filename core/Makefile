@@ -3,6 +3,7 @@ CFLAGS=-std=gnu11 -Wall -Wextra -Werror -g
 CFLAGS+=-I$(IRSSI_INCLUDE)/src/
 CFLAGS+=-I$(IRSSI_INCLUDE)/src/core/
 CFLAGS+=-I$(IRSSI_INCLUDE)/src/fe-common/core/
+CFLAGS+=-I$(IRSSI_INCLUDE)/src/fe-text/
 CFLAGS+=$(shell pkg-config glib-2.0 --cflags)
 CFLAGS+=-DUOFF_T_LONG -fPIC
 all: libquassel_core.so
