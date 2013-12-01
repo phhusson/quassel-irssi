@@ -10,7 +10,7 @@ all: libquassel_core.so
 LIBQUASSEL:=lib/bot.o lib/cmds.o lib/display.o lib/endian.o
 LIBQUASSEL+=lib/getters.o lib/main.o lib/setters.o
 
-libquassel_core.so: quassel-core.o $(LIBQUASSEL)
+libquassel_core.so: quassel-core.o quassel-net.o $(LIBQUASSEL)
 	gcc -shared $^ -o $@
 
 clean:

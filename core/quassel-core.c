@@ -19,6 +19,7 @@
 //fe-common/core
 #include <fe-windows.h>
 
+#include "quassel-irssi.h"
 
 static CHATNET_REC *create_chatnet(void) {
     return g_new0(CHATNET_REC, 1);
@@ -33,35 +34,6 @@ char *channame(int net, char *buf) {
 static SERVER_SETUP_REC *create_server_setup(void) {
     return g_new0(SERVER_SETUP_REC, 1);
 }
-
-#define STRUCT_SERVER_CONNECT_REC struct Quassel_SERVER_CONNECT_REC_s 
-typedef struct Quassel_SERVER_CONNECT_REC_s {
-#include <irssi/src/core/server-connect-rec.h>
-} Quassel_SERVER_CONNECT_REC;
-
-#define STRUCT_SERVER_REC struct Quassel_SERVER_REC_s 
-typedef struct Quassel_SERVER_REC_s {
-#include <irssi/src/core/server-rec.h>
-	char *msg;
-	int size;
-	int got;
-} Quassel_SERVER_REC;
-
-#define STRUCT_CHANNEL_REC struct Quassel_CHANNEL_REC_s 
-typedef struct Quassel_CHANNEL_REC_s {
-#include <irssi/src/core/channel-rec.h>
-	int buffer_id;
-	int last_msg_id;
-} Quassel_CHANNEL_REC;
-
-#define STRUCT_SERVER_REC struct Quassel_SERVER_REC_s 
-#define STRUCT_QUERY_REC struct Quassel_QUERY_REC_s 
-typedef struct Quassel_QUERY_REC_s {
-#include <irssi/src/core/query-rec.h>
-	int buffer_id;
-} Quassel_QUERY_REC;
-
-#define Quassel_PROTOCOL (chat_protocol_lookup("Quassel"))
 
 static SERVER_CONNECT_REC * create_server_connect(void) {
     return (SERVER_CONNECT_REC *) g_new0(Quassel_SERVER_CONNECT_REC, 1);
@@ -89,17 +61,9 @@ CHANNEL_REC *quassel_channel_create(SERVER_REC *server, const char *name,
 	return (CHANNEL_REC*)rec;
 }
 
-static void quassel_channels_join(SERVER_REC *server, const char *data,
+void quassel_irssi_channels_join(SERVER_REC *server, const char *data,
 			      int automatic) {
 	quassel_channel_create(server, data, data, automatic);
-}
-
-
-void quassel_server_connect(SERVER_REC *server) {
-	if (!server_start_connect(server)) {
-		server_connect_unref(server->connrec);
-		g_free(server);
-	}
 }
 
 QUERY_REC* quassel_query_create(const char *server_tag, const char* nick, int automatic) {
@@ -149,33 +113,6 @@ void quassel_irssi_joined(void* arg, char* network, char *chan) {
 	signal_emit("channel joined", 1, chan_rec);
 end:
 	free(_chan);
-}
-
-extern void quassel_init_packet(GIOChannel*);
-extern void quassel_parse_message(GIOChannel*, char*, void*);
-
-static void quassel_parse_incoming(Quassel_SERVER_REC* r) {
-	GIOChannel *chan = net_sendbuffer_handle(r->handle);
-
-	server_ref((SERVER_REC*)r);
-	if(!r->size) {
-		uint32_t size;
-		net_receive(chan, (char*)&size, 4);
-		size = ntohl(size);
-		r->size = size;
-		r->msg = malloc(size);
-		r->got = 0;
-	}
-
-	r->got += net_receive(chan, r->msg+r->got, r->size - r->got);
-	if(r->got == r->size) {
-		quassel_parse_message(chan, r->msg, r);
-		free(r->msg);
-		r->size = 0;
-		r->got = 0;
-		r->msg = NULL;
-	}
-	server_unref((SERVER_REC*)r);
 }
 
 //fe-windows.c
@@ -276,12 +213,8 @@ end:
 	free(nick);
 }
 
-void irssi_handle_connected(Quassel_SERVER_REC* r) {
-	r->connected = TRUE;
-}
-
 void irssi_send_message(GIOChannel* h, int buffer, const char *message);
-static void send_message(SERVER_REC *server, const char *target,
+void quassel_irssi_send_message(SERVER_REC *server, const char *target,
 			 const char *msg, int target_type) {
 	Quassel_CHANNEL_REC* chan_rec = (Quassel_CHANNEL_REC*) channel_find(server, target);
 	(void) target_type;
@@ -289,16 +222,6 @@ static void send_message(SERVER_REC *server, const char *target,
 		return;
 	
 	irssi_send_message(net_sendbuffer_handle(server->handle), chan_rec->buffer_id, msg);
-}
-
-static void sig_connected(Quassel_SERVER_REC* r) {
-	if(!PROTO_CHECK_CAST(SERVER(r), Quassel_SERVER_REC, chat_type, "Quassel"))
-		return;
-	r->readtag =
-		g_input_add(net_sendbuffer_handle(r->handle),
-			    G_INPUT_READ,
-			    (GInputFunction) quassel_parse_incoming, r);
-	quassel_init_packet(net_sendbuffer_handle(r->handle));
 }
 
 static void sig_own_public(SERVER_REC *server, const char *msg, const char *channel,
@@ -375,43 +298,6 @@ void quassel_irssi_topic(SERVER_REC* server, char* network, char *chan, char *to
 		chanrec->buffer_id = quassel_find_buffer_id(chan, atoi(network));
 }
 
-static const char *get_nick_flags(SERVER_REC *server) {
-	(void)server;
-	return "";
-}
-
-extern void quassel_user_pass(char *user, char *pass);
-SERVER_REC* quassel_server_init_connect(SERVER_CONNECT_REC* conn) {
-	Quassel_SERVER_CONNECT_REC *r = (Quassel_SERVER_CONNECT_REC*) conn;
-	(void) r;
-
-	Quassel_SERVER_REC *ret = (Quassel_SERVER_REC*) g_new0(Quassel_SERVER_REC, 1);
-	ret->chat_type = Quassel_PROTOCOL;
-	ret->connrec = r;
-	ret->msg = NULL;
-	ret->size = 0;
-	ret->got = 0;
-	server_connect_ref(SERVER_CONNECT(conn));
-
-	ret->connrec->use_ssl = 0;
-	ret->connrec->port = 443;
-
-	ret->channels_join = quassel_channels_join;
-	ret->send_message = send_message;
-	ret->get_nick_flags = get_nick_flags;
-	auto int ischannel(SERVER_REC* server, const char* chan) {
-		(void) server;
-		(void) chan;
-		return 0;
-	}
-	ret->ischannel = ischannel;
-	quassel_user_pass(conn->nick, conn->password);
-
-	server_connect_init((SERVER_REC*)ret);
-
-	return (SERVER_REC*)ret;
-}
-
 void quassel_core_init(void) {
 	CHAT_PROTOCOL_REC *rec;
 	rec = g_new0(CHAT_PROTOCOL_REC, 1);
@@ -426,8 +312,6 @@ void quassel_core_init(void) {
     rec->create_channel_setup = create_channel_setup;
     rec->destroy_server_connect = destroy_server_connect;
 
-    rec->server_init_connect = quassel_server_init_connect;
-    rec->server_connect = quassel_server_connect;
     rec->query_create = quassel_query_create;
 
 	rec->channel_create = quassel_channel_create;
@@ -435,12 +319,12 @@ void quassel_core_init(void) {
 	command_set_options("connect", "+quassel");
 	command_set_options("server add", "-quassel");
 
+	quassel_net_init(rec);
     chat_protocol_register(rec);
     g_free(rec);
 
     module_register("quassel", "core");
 
-	signal_add_first("server connected", (SIGNAL_FUNC) sig_connected);
 	signal_add_first("message own_public", (SIGNAL_FUNC) sig_own_public);
 	signal_add_first("window changed", (SIGNAL_FUNC) sig_window_changed);
 }
