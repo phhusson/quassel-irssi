@@ -67,6 +67,57 @@ static void sig_window_changed(WINDOW_REC *active, WINDOW_REC *old) {
 	window_read(old);
 }
 
+void quassel_irssi_set_last_seen_msg(void *arg, int buffer_id, int msgid) {
+	(void) msgid;
+
+	Quassel_SERVER_REC *server = (Quassel_SERVER_REC*)arg;
+	if(!PROTO_CHECK_CAST(SERVER(server), Quassel_SERVER_REC, chat_type, "Quassel"))
+		return;
+
+	Quassel_CHANNEL_REC* chanrec = NULL;
+	//First find channel
+	GSList *chans = server->channels;
+	while(chans) {
+		chanrec = (Quassel_CHANNEL_REC*) chans->data;
+		if(chanrec->buffer_id == buffer_id)
+			break;
+		chanrec = NULL;
+		chans = g_slist_next(chans);
+	}
+	if(!chanrec)
+		return;
+
+	//Now find windows
+	GSList *win = windows;
+	while(win) {
+		WINDOW_REC* winrec = (WINDOW_REC*) win->data;
+		if(winrec->active_server != SERVER(server) &&
+			winrec->connect_server != SERVER(server))
+			goto next;
+
+		if(!winrec->active)
+			goto next;
+		if(strcmp(winrec->active->visible_name, chanrec->name)==0) {
+				signal_emit("window dehilight", 1, winrec);
+		}
+#if 0
+		GSList *bound = winrec->bound_items;
+		while(bound) {
+			WINDOW_BIND_REC* bindrec = (WINDOW_BIND_REC*) bound->data;
+			fprintf(stderr, "%s VS %s\n", bindrec->name, chanrec->name);
+			if(strcmp(bindrec->name, chanrec->name) == 0) {
+	fprintf(stderr, "%s:%s:%d\n", __FILE__, __FUNCTION__, __LINE__);
+				signal_emit("window dehilight", 1, winrec);
+			}
+			bound = g_slist_next(bound);
+		}
+#endif
+
+next:
+		win = g_slist_next(win);
+	}
+}
+
 void quassel_fewindow_init(void) {
 	signal_add("window changed", (SIGNAL_FUNC) sig_window_changed);
 }

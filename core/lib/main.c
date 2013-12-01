@@ -86,7 +86,8 @@ void handle_irc_users_and_channels(void *arg, char** buf, char *network) {
 	}
 }
 
-int parse_message(GIOChannel* h, char *buf, void* arg) {
+extern void quassel_irssi_set_last_seen_msg(void *irssi_arg, int bufferid, int msgid);
+int parse_message(GIOChannel* h, char *buf, void* irssi_arg) {
 	int type=get_qvariant(&buf);
 	if(type==9) {
 		//List, "normal" mode
@@ -166,6 +167,7 @@ int parse_message(GIOChannel* h, char *buf, void* arg) {
 								return 1;
 							free(type_str);
 							int messageid = get_int(&buf);
+							quassel_irssi_set_last_seen_msg(irssi_arg, bufferid, messageid);
 							handle_sync(BufferSyncer, SetLastSeenMsg, bufferid, messageid);
 							return 0;
 						} else if(!strcmp(fnc, "setMarkerLine")) {
@@ -479,7 +481,7 @@ int parse_message(GIOChannel* h, char *buf, void* arg) {
 							return 1;
 						}
 						struct message m = get_message(&buf);
-						handle_message(m, arg);
+						handle_message(m, irssi_arg);
 						free(cmd_str);
 						return 0;
 					} else if(!strcmp(cmd_str, "__objectRenamed__")) {
@@ -690,7 +692,7 @@ int parse_message(GIOChannel* h, char *buf, void* arg) {
 						for(int i=0; i<len; ++i) {
 							char *varname = get_string(&buf);
 							if(strcmp(varname, "IrcUsersAndChannels") == 0) {
-								handle_irc_users_and_channels(arg, &buf, network_id);
+								handle_irc_users_and_channels(irssi_arg, &buf, network_id);
 							} else
 								get_variant(&buf);
 						}
@@ -724,7 +726,7 @@ int parse_message(GIOChannel* h, char *buf, void* arg) {
 				if(strcmp(category, "ClientInitAck")==0)
 					Login(h, login, pass);
 				else if(strcmp(category, "SessionInit")==0) {
-					irssi_handle_connected(arg);
+					irssi_handle_connected(irssi_arg);
 					//Get buffers' display status
 					initRequest(h, "BufferViewConfig", "0");
 					//Retreive marker lines and last seen msg
