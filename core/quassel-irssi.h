@@ -35,11 +35,23 @@ typedef struct Quassel_QUERY_REC_s {
 extern void irssi_handle_connected(Quassel_SERVER_REC* r);
 extern void quassel_net_init(CHAT_PROTOCOL_REC* rec);
 extern void quassel_irssi_channels_join(SERVER_REC *server, const char *data, int automatic);
-extern void quassel_irssi_send_message(SERVER_REC *server, const char *target, const char *msg, int target_type);
 extern void quassel_net_init(CHAT_PROTOCOL_REC* rec);
 
 //quassel-fe-window.c
 extern void quassel_irssi_check_read(Quassel_CHANNEL_REC* chanrec);
 void quassel_fewindow_init(void);
 void quassel_fewindow_deinit(void);
+
+static inline char *channame(int net, char *buf) {
+	char *ret = NULL;
+	asprintf(&ret, "%d-%s", net, buf);
+	return ret;
+}
+
+//quassel-msgs.c
+extern void quassel_irssi_send_message(SERVER_REC *server, const char *target, const char *msg, int target_type);
+extern void quassel_msgs_init(void);
+
+//quassel-core.c
+CHANNEL_REC *quassel_channel_create(SERVER_REC *server, const char *name, const char *visible_name, int automatic);
 #endif /* QUASSEL_IRSSI_H */
