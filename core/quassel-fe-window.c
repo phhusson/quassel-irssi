@@ -137,7 +137,8 @@ void quassel_irssi_set_last_seen_msg(void *arg, int buffer_id, int msgid) {
 
 			if(winrec != active_win) {
 				LINE_REC *linerec = textbuffer_view_get_bookmark(WINDOW_GUI(winrec)->view, "trackbar");
-				textbuffer_view_remove_line(WINDOW_GUI(winrec)->view, linerec);
+				if(linerec)
+					textbuffer_view_remove_line(WINDOW_GUI(winrec)->view, linerec);
 
 				char *str = malloc(winrec->width+3);
 				str[0] = '%';
