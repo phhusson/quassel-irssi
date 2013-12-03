@@ -50,6 +50,6 @@ To automtically connect to it, you can add:
     load quassel
     connect quassel_phh
   
-in your ~/.irssi/autostart
+in your ~/.irssi/startup
 
 If someone knows how to do all this 100% from irssi text frontend, i'd appreciate it :-)
