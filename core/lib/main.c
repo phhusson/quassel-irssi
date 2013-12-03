@@ -752,7 +752,7 @@ int parse_message(GIOChannel* h, char *buf, void* irssi_arg) {
 							get_qvariant(&buf);
 							get_bytearray(&buf);
 							struct bufferinfo m=get_bufferinfo(&buf);
-							handle_sync(BufferSyncer, Create, m.id, m.network, m.name);
+							handle_sync(BufferSyncer, Create, m.id, m.network, m.type, m.group, m.name);
 						}
 						continue;
 					} else if(strcmp(key2, "NetworkIds") == 0) {

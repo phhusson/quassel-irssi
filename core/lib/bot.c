@@ -110,8 +110,10 @@ void handle_sync(object_t o, function_t f, ...) {
 		case Create:
 			bufid=va_arg(ap, int);
 			netid=va_arg(ap, int);
+			int type=va_arg(ap, int);
+			int group=va_arg(ap, int);
 			name=va_arg(ap, char*);
-			dprintf("CreateBuffer(%d, %d, %s)\n", netid, bufid, name);
+			dprintf("CreateBuffer(%d, %d, %d, %d, %s)\n", netid, bufid, type, group, name);
 			if(bufid>=n_buffers) {
 				buffers=realloc(buffers, sizeof(struct buffer)*(bufid+1));
 				int i;
@@ -122,6 +124,8 @@ void handle_sync(object_t o, function_t f, ...) {
 			buffers[bufid].i.network=netid;
 			buffers[bufid].i.id=bufid;
 			buffers[bufid].i.name=name;
+			buffers[bufid].i.type=type;
+			buffers[bufid].i.group=group;
 			buffers[bufid].marker=0;
 			buffers[bufid].lastseen=0;
 			buffers[bufid].displayed=1;
