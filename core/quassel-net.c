@@ -25,7 +25,7 @@ static void quassel_server_connect(SERVER_REC *server) {
 	}
 }
 
-extern void quassel_init_packet(GIOChannel*);
+extern void quassel_init_packet(GIOChannel*,int);
 extern void quassel_parse_message(GIOChannel*, char*, void*);
 
 static void quassel_parse_incoming(Quassel_SERVER_REC* r) {
@@ -36,6 +36,8 @@ static void quassel_parse_incoming(Quassel_SERVER_REC* r) {
 		uint32_t size;
 		net_receive(chan, (char*)&size, 4);
 		size = ntohl(size);
+		if(!size)
+			return;
 		r->size = size;
 		r->msg = malloc(size);
 		r->got = 0;
@@ -63,7 +65,7 @@ static void sig_connected(Quassel_SERVER_REC* r) {
 		g_input_add(net_sendbuffer_handle(r->handle),
 			    G_INPUT_READ,
 			    (GInputFunction) quassel_parse_incoming, r);
-	quassel_init_packet(net_sendbuffer_handle(r->handle));
+	quassel_init_packet(net_sendbuffer_handle(r->handle), r->ssl);
 }
 
 static const char *get_nick_flags(SERVER_REC *server) {
@@ -71,10 +73,8 @@ static const char *get_nick_flags(SERVER_REC *server) {
 	return "";
 }
 
-extern void quassel_user_pass(char *user, char *pass);
 static SERVER_REC* quassel_server_init_connect(SERVER_CONNECT_REC* conn) {
 	Quassel_SERVER_CONNECT_REC *r = (Quassel_SERVER_CONNECT_REC*) conn;
-	(void) r;
 
 	Quassel_SERVER_REC *ret = (Quassel_SERVER_REC*) g_new0(Quassel_SERVER_REC, 1);
 	ret->chat_type = Quassel_PROTOCOL;
@@ -84,6 +84,9 @@ static SERVER_REC* quassel_server_init_connect(SERVER_CONNECT_REC* conn) {
 	ret->got = 0;
 	server_connect_ref(SERVER_CONNECT(conn));
 
+	if(conn->use_ssl) {
+		ret->ssl = 1;
+	}
 	ret->connrec->use_ssl = 0;
 
 	ret->channels_join = quassel_irssi_channels_join;
@@ -95,7 +98,6 @@ static SERVER_REC* quassel_server_init_connect(SERVER_CONNECT_REC* conn) {
 		return 0;
 	}
 	ret->ischannel = ischannel;
-	quassel_user_pass(conn->nick, conn->password);
 
 	server_connect_init((SERVER_REC*)ret);
 
@@ -103,8 +105,25 @@ static SERVER_REC* quassel_server_init_connect(SERVER_CONNECT_REC* conn) {
 }
 
 void quassel_net_init(CHAT_PROTOCOL_REC* rec) {
-
-    rec->server_init_connect = quassel_server_init_connect;
-    rec->server_connect = quassel_server_connect;
+	rec->server_init_connect = quassel_server_init_connect;
+	rec->server_connect = quassel_server_connect;
 	signal_add_first("server connected", (SIGNAL_FUNC) sig_connected);
+}
+
+void quassel_login(GIOChannel* h, char *user, char *pass);
+void quassel_irssi_init_ack(Quassel_SERVER_REC *server) {
+	if(!server->ssl)
+		goto login;
+	GIOChannel* ssl_handle = irssi_ssl_get_iochannel(server->handle->handle, 1337, SERVER(server));
+	int error;
+	//That's polling, and that's really bad...
+	while( (error=irssi_ssl_handshake(ssl_handle)) & 1) {
+		if(error==-1) {
+			fprintf(stderr, "SSL handshake failed\n");
+		}
+	}
+	server->handle->handle = ssl_handle;
+
+login:
+	quassel_login(server->handle->handle, server->connrec->nick, server->connrec->password);
 }

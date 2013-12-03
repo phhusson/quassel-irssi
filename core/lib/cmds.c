@@ -107,7 +107,7 @@ void quassel_set_last_seen_msg(GIOChannel* h, int buffer_id, int msg_id) {
 	net_transmit(h, msg, size);
 }
 
-void Login(GIOChannel* h, char *user, char *pass) {
+void quassel_login(GIOChannel* h, char *user, char *pass) {
 	//HeartBeat
 	char msg[2048];
 	int size;

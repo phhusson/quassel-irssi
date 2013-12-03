@@ -142,7 +142,8 @@ void irssi_quassel_handle(Quassel_SERVER_REC* r, int msg_id, int bufferid, int n
 		g_slist_free(nicks);
 	} else /*if(type == 0x400) */{
 		char *str = NULL;
-		asprintf(&str, "%d:%s:%s", type, sender, content);
+		int len = asprintf(&str, "%d:%s:%s", type, sender, content);
+		(void)len;
 		chanrec->buffer_id = bufferid;
 		signal_emit("message public", 5,
 				r, str, "server", "coin", chan);

@@ -3,20 +3,22 @@
 
 #define STRUCT_SERVER_CONNECT_REC struct Quassel_SERVER_CONNECT_REC_s 
 typedef struct Quassel_SERVER_CONNECT_REC_s {
-#include <irssi/src/core/server-connect-rec.h>
+#include <server-connect-rec.h>
 } Quassel_SERVER_CONNECT_REC;
 
 #define STRUCT_SERVER_REC struct Quassel_SERVER_REC_s 
 typedef struct Quassel_SERVER_REC_s {
-#include <irssi/src/core/server-rec.h>
+#include <server-rec.h>
 	char *msg;
 	int size;
 	int got;
+
+	int ssl;
 } Quassel_SERVER_REC;
 
 #define STRUCT_CHANNEL_REC struct Quassel_CHANNEL_REC_s 
 typedef struct Quassel_CHANNEL_REC_s {
-#include <irssi/src/core/channel-rec.h>
+#include <channel-rec.h>
 	int buffer_id;
 	int last_msg_id;
 } Quassel_CHANNEL_REC;
@@ -24,7 +26,7 @@ typedef struct Quassel_CHANNEL_REC_s {
 #define STRUCT_SERVER_REC struct Quassel_SERVER_REC_s 
 #define STRUCT_QUERY_REC struct Quassel_QUERY_REC_s 
 typedef struct Quassel_QUERY_REC_s {
-#include <irssi/src/core/query-rec.h>
+#include <query-rec.h>
 	int buffer_id;
 } Quassel_QUERY_REC;
 
@@ -44,7 +46,8 @@ void quassel_fewindow_deinit(void);
 
 static inline char *channame(int net, char *buf) {
 	char *ret = NULL;
-	asprintf(&ret, "%d-%s", net, buf);
+	int len = asprintf(&ret, "%d-%s", net, buf);
+	(void)len;
 	return ret;
 }
 
@@ -54,7 +57,6 @@ extern void quassel_msgs_init(void);
 
 //quassel-core.c
 CHANNEL_REC *quassel_channel_create(SERVER_REC *server, const char *name, const char *visible_name, int automatic);
-
 
 // lib
 void quassel_request_backlog(GIOChannel *h, int buffer, int first, int last, int limit, int additional);

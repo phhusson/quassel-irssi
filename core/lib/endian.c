@@ -18,7 +18,7 @@
 #include <stdint.h>
 
 unsigned long long int lltob(unsigned long long int a) {
-	unsigned long long int ret;
+	unsigned long long int ret = 0;
 	int i;
 	for(i=0;i<8;++i) {
 		ret <<= 8;
@@ -40,7 +40,7 @@ uint32_t ltob(uint32_t a) {
 }
 
 unsigned short stob(unsigned short a) {
-	unsigned short ret;
+	unsigned short ret = 0;
 	int i;
 	for(i=0;i<4;++i) {
 		ret <<= 8;

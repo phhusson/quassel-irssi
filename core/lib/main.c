@@ -31,9 +31,6 @@
 #include <common.h>
 #include <network.h>
 
-static char* login;
-static char* pass;
-
 void irssi_handle_connected(void*);
 
 extern void quassel_irssi_topic(void *arg, char *network, char *chan, char *topic);
@@ -87,6 +84,7 @@ void handle_irc_users_and_channels(void *arg, char** buf, char *network) {
 }
 
 extern void quassel_irssi_set_last_seen_msg(void *irssi_arg, int bufferid, int msgid);
+extern void quassel_irssi_init_ack(void *irssi_arg);
 int parse_message(GIOChannel* h, char *buf, void* irssi_arg) {
 	int type=get_qvariant(&buf);
 	if(type==9) {
@@ -723,9 +721,11 @@ int parse_message(GIOChannel* h, char *buf, void* irssi_arg) {
 					return 1;
 				}
 				char *category=get_string(&buf);
-				if(strcmp(category, "ClientInitAck")==0)
-					Login(h, login, pass);
-				else if(strcmp(category, "SessionInit")==0) {
+				if(strcmp(category, "ClientInitAck")==0) {
+					//We can't go further here, because GIOChannel* h might have changed
+					quassel_irssi_init_ack(irssi_arg);
+					return 0;
+				} else if(strcmp(category, "SessionInit")==0) {
 					irssi_handle_connected(irssi_arg);
 					//Get buffers' display status
 					initRequest(h, "BufferViewConfig", "0");
@@ -773,7 +773,8 @@ int parse_message(GIOChannel* h, char *buf, void* irssi_arg) {
 							//Contains only an int
 							int network_id = get_int(&buf);
 							char *s = NULL;
-							asprintf(&s, "%d", network_id);
+							int len = asprintf(&s, "%d", network_id);
+							(void) len;
 							initRequest(h, "Network", s);
 							free(s);
 						}
@@ -806,17 +807,12 @@ int write_io(GIOChannel* h, char *b, int n) {
 	return ret;
 }
 
-void quassel_user_pass(char *_login, char *_pass) {
-	login = _login;
-	pass = _pass;
-}
-
-void quassel_init_packet(GIOChannel* h) {
+void quassel_init_packet(GIOChannel* h, int ssl) {
 	int size=0;
 	int elements=0;
 	char msg[2048];
 
-	size+=add_bool_in_map(msg+size, "UseSsl", 0);
+	size+=add_bool_in_map(msg+size, "UseSsl", !!ssl);
 	elements++;
 
 	size+=add_bool_in_map(msg+size, "UseCompression", 0);
