@@ -85,7 +85,6 @@ static SERVER_REC* quassel_server_init_connect(SERVER_CONNECT_REC* conn) {
 	server_connect_ref(SERVER_CONNECT(conn));
 
 	ret->connrec->use_ssl = 0;
-	ret->connrec->port = 443;
 
 	ret->channels_join = quassel_irssi_channels_join;
 	ret->send_message = quassel_irssi_send_message;
