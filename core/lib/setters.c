@@ -50,29 +50,35 @@ char *convert_string(char *str, int* size) {
 int add_string(char *msg, char *str) {
 	int size=0;
 	char *tmp=convert_string(str, &size);
-	*(uint32_t*)(msg)=ltob(size);
+	*(uint32_t*)(msg)=htonl(size);
 	memcpy(msg+4, tmp, size);
 	return size+4;
 }
 
 int add_bytearray(char *msg, char *str) {
-	*(uint32_t*)(msg)=ltob(strlen(str));
+	*(uint32_t*)(msg)=htonl(strlen(str));
 	memcpy(msg+4, str, strlen(str));
 	return strlen(str)+4;
 }
 
+int add_bytearray2(char *msg, char *str, int size) {
+	*(uint32_t*)(msg)=htonl(size);
+	memcpy(msg+4, str, size);
+	return size+4;
+}
+
 int add_int(char *msg, uint32_t v) {
-	*(uint32_t*)(msg)=ltob(v);
+	*(uint32_t*)(msg)=htonl(v);
 	return 4;
 }
 
 int add_short(char *msg, uint16_t v) {
-	*(uint16_t*)(msg)=stob(v);
+	*(uint16_t*)(msg)=htons(v);
 	return 2;
 }
 
 int add_qvariant(char *msg, int type) {
-	*(uint32_t*)(msg)=ltob(type);
+	*(uint32_t*)(msg)=htonl(type);
 	msg[4]=0;
 	return 5;
 }

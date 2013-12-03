@@ -831,17 +831,17 @@ void quassel_init_packet(GIOChannel* h, int ssl) {
 	elements++;
 
 	//The message will be of that length
-	unsigned int v=ltob(size+5);
+	unsigned int v=htonl(size+5);
 	net_transmit(h, (char*)&v, 4);
 	//This is a QMap
-	v=ltob(8);
+	v=htonl(8);
 	net_transmit(h, (char*)&v, 4);
 	
 	//QMap is valid
 	v=0;
 	net_transmit(h, (char*)&v, 1);
 	//The QMap has <elements> elements
-	v=ltob(elements);
+	v=htonl(elements);
 	net_transmit(h, (char*)&v, 4);
 	net_transmit(h, msg, size);
 }

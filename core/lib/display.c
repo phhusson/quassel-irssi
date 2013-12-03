@@ -27,7 +27,7 @@
 
 int display_string(char *buf) {
 	uint32_t size = *((uint32_t*)buf);
-	size = ltob(size);
+	size = ntohl(size);
 	if(size==0xffffffff) {
 		printf(" Str()");
 		return 4;
@@ -41,23 +41,23 @@ int display_string(char *buf) {
 
 int display_bufferinfo(char *buf) {
 	uint32_t id = *((uint32_t*)buf);
-	id=ltob(id);
+	id=ntohl(id);
 	buf+=4;
 
 	uint32_t networkID=*((uint32_t*)buf);
-	networkID=ltob(networkID);
+	networkID=ntohl(networkID);
 	buf+=4;
 
 	uint16_t type=*((uint16_t*)buf);
-	type=stob(type);
+	type=ntohs(type);
 	buf+=2;
 
 	uint32_t groupID=*((uint32_t*)buf);
-	groupID=ltob(groupID);
+	groupID=ntohl(groupID);
 	buf+=4;
 
 	uint32_t size = *((uint32_t*)buf);
-	size = ltob(size);
+	size = ntohl(size);
 	buf+=4;
 
 	if(size==0xffffffff) {
@@ -71,15 +71,15 @@ int display_bufferinfo(char *buf) {
 int display_message(char *buf) {
 	char *orig_buf=buf;
 	uint32_t messageID=*((uint32_t*)buf);
-	messageID=ltob(messageID);
+	messageID=ntohl(messageID);
 	buf+=4;
 
 	uint32_t timestamp=*((uint32_t*)buf);
-	timestamp=ltob(timestamp);
+	timestamp=ntohl(timestamp);
 	buf+=4;
 
 	uint32_t type=*((uint32_t*)buf);
-	type=ltob(type);
+	type=ntohl(type);
 	buf+=4;
 
 	char flags=*buf;
@@ -102,7 +102,7 @@ int display_message(char *buf) {
 
 int display_bytearray(char *buf) {
 	uint32_t size = *((uint32_t*)buf);
-	size = ltob(size);
+	size = ntohl(size);
 	if(size==0xffffffff) {
 		printf("Bytearray()");
 		return 4;
@@ -119,7 +119,7 @@ int display_bytearray(char *buf) {
 int display_usertype(char *buf) {
 	char *orig_buf=buf;
 	uint32_t size = *((uint32_t*)buf);
-	size = ltob(size);
+	size = ntohl(size);
 	buf+=4;
 	if(strcmp(buf, "NetworkId")==0 || strcmp(buf, "IdentityId")==0 || strcmp(buf, "BufferId")==0 || strcmp(buf, "MsgId")==0) {
 		printf("%s(", buf);
@@ -148,24 +148,24 @@ int display_usertype(char *buf) {
 
 int display_int(char *buf, int type) {
 	uint32_t size = *((uint32_t*)buf);
-	size = ltob(size);
+	size = ntohl(size);
 	printf(" Int(%08x, %d) ", size, type);
 	return 4;
 }
 
 int display_short(char *buf) {
 	uint16_t size = *((uint16_t*)buf);
-	size = stob(size);
+	size = ntohs(size);
 	printf(" Short(%04x) ", size);
 	return 2;
 }
 
 int display_date(char *buf) {
 	uint32_t julianDay = *((uint32_t*)buf);
-	julianDay=ltob(julianDay);
+	julianDay=ntohl(julianDay);
 	buf+=4;
 	uint32_t secondSinceMidnight = *((uint32_t*)buf);
-	secondSinceMidnight=ltob(secondSinceMidnight);
+	secondSinceMidnight=ntohl(secondSinceMidnight);
 	buf+=4;
 	uint32_t isUTC = *buf;
 	buf++;
@@ -175,7 +175,7 @@ int display_date(char *buf) {
 
 int display_time(char *buf) {
 	uint32_t secondsSinceMidnight = *((uint32_t*)buf);
-	secondsSinceMidnight=ltob(secondsSinceMidnight);
+	secondsSinceMidnight=ntohl(secondsSinceMidnight);
 	printf(" Time(%d) \n", secondsSinceMidnight);
 	return 4;
 }
@@ -188,7 +188,7 @@ int display_bool(char *buf) {
 int display_map(char *buf) {
 	char *orig_buf=buf;
 	uint32_t elements = *((uint32_t*)buf);
-	elements = ltob(elements);
+	elements = ntohl(elements);
 	printf("Got %d elements\n", elements);
 	printf("Map(\n");
 	buf+=4;
@@ -210,7 +210,7 @@ int display_map(char *buf) {
 int display_list(char *buf) {
 	char *orig_buf=buf;
 	uint32_t elements = *((uint32_t*)buf);
-	elements = ltob(elements);
+	elements = ntohl(elements);
 	printf("Got %d elements\n", elements);
 	printf("List(\n");
 	buf+=4;
@@ -228,7 +228,7 @@ int display_list(char *buf) {
 int display_stringlist(char *buf) {
 	char *orig_buf=buf;
 	uint32_t elements = *((uint32_t*)buf);
-	elements = ltob(elements);
+	elements = ntohl(elements);
 	printf("Got %d elements\n", elements);
 	printf("StringList(\n");
 	buf+=4;
@@ -245,7 +245,7 @@ int display_stringlist(char *buf) {
 int display_qvariant(char *buf) {
 	char *orig_buf=buf;
 	uint32_t type = *((uint32_t*)buf);
-	type=ltob(type);
+	type=ntohl(type);
 	buf+=4;
 	char null=*buf;
 	buf++;
