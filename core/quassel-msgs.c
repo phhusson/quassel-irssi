@@ -55,6 +55,7 @@ void quassel_irssi_joined(void* arg, char* network, char *chan) {
 	char *_chan = channame(atoi(network), chan);
 	Quassel_CHANNEL_REC* chan_rec = (Quassel_CHANNEL_REC*) channel_find(SERVER(arg), _chan);
 	if(!chan_rec) goto end;
+	signal_emit("message join", 4, SERVER(arg), _chan, SERVER(arg)->nick, "quassel@irssi");
 	signal_emit("channel joined", 1, chan_rec);
 end:
 	free(_chan);
