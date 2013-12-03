@@ -111,6 +111,7 @@ void quassel_net_init(CHAT_PROTOCOL_REC* rec) {
 }
 
 void quassel_login(GIOChannel* h, char *user, char *pass);
+GIOChannel *irssi_ssl_get_iochannel(GIOChannel *handle, int port, SERVER_REC *server);
 void quassel_irssi_init_ack(Quassel_SERVER_REC *server) {
 	if(!server->ssl)
 		goto login;

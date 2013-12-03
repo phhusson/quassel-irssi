@@ -28,7 +28,8 @@
 #include <iconv.h>
 #include "quasselc.h"
 
-void useless_printf() {
+void useless_printf(char *str, ...) {
+	(void)str;
 }
 
 #if 0
