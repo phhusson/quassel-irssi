@@ -36,7 +36,7 @@ static void quassel_parse_incoming(Quassel_SERVER_REC* r) {
 		uint32_t size;
 		net_receive(chan, (char*)&size, 4);
 		size = ntohl(size);
-		if(!size)
+		if(size<=0)
 			return;
 		r->msg = malloc(size);
 		if(!r->msg)
@@ -97,7 +97,10 @@ static SERVER_REC* quassel_server_init_connect(SERVER_CONNECT_REC* conn) {
 	auto int ischannel(SERVER_REC* server, const char* chan) {
 		(void) server;
 		(void) chan;
-		return 0;
+		char *p = index(chan, '-');
+		if(!p)
+			return 0;
+		return *(p+1) == '#';
 	}
 	ret->ischannel = ischannel;
 

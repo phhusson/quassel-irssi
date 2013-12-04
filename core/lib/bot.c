@@ -55,7 +55,7 @@ int quassel_find_buffer_id(char *name, uint32_t network) {
 	for(i=0;i<n_buffers;++i) {
 		if(buffers[i].i.id==(uint32_t)-1)
 			continue;
-		if(strcmp(buffers[i].i.name, name)==0 && buffers[i].i.network == network)
+		if(strcmp(buffers[i].i.name, name)==0 && (network == (uint32_t)-1 || buffers[i].i.network == network))
 			return i;
 	}
 	return -1;
@@ -63,6 +63,14 @@ int quassel_find_buffer_id(char *name, uint32_t network) {
 
 void irssi_send_message(GIOChannel* h, int buffer, char *message) {
 	send_message(h, buffers[buffer].i, message);
+}
+
+//Returns buffer id for caching
+void irssi_send_message2(GIOChannel* h, int network, char* buffer, char *message) {
+	int res = quassel_find_buffer_id(buffer, network);
+	if(res == -1)
+		return;
+	send_message(h, buffers[res].i, message);
 }
 
 void handle_backlog(struct message m) {

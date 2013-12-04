@@ -86,6 +86,8 @@ static void window_read(WINDOW_REC* win) {
 	if(!PROTO_CHECK_CAST(SERVER(server), Quassel_SERVER_REC, chat_type, "Quassel"))
 		return;
 	Quassel_CHANNEL_REC *chanrec = (Quassel_CHANNEL_REC*) channel_find(SERVER(server), wi->visible_name);
+	if(!chanrec)
+		return;
 
 	quassel_chan_read(chanrec);
 }

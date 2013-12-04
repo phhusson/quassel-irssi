@@ -158,17 +158,25 @@ end:
 }
 
 void irssi_send_message(GIOChannel* h, int buffer, const char *message);
+void irssi_send_message2(GIOChannel* h, int network, const char* buffer, const char *message);
 void quassel_irssi_send_message(SERVER_REC *server, const char *target,
 			 const char *msg, int target_type) {
 	Quassel_CHANNEL_REC* chan_rec = (Quassel_CHANNEL_REC*) channel_find(server, target);
 	(void) target_type;
-	if(!chan_rec)
-		return;
 	
-	irssi_send_message(net_sendbuffer_handle(server->handle), chan_rec->buffer_id, msg);
+	if(chan_rec && chan_rec->buffer_id != -1) {
+		irssi_send_message(net_sendbuffer_handle(server->handle), chan_rec->buffer_id, msg);
+	} else {
+		char chan[256];
+		int network = 0;
+		if(sscanf(target, "%d-%255s", &network, chan) != 2)
+			irssi_send_message2(net_sendbuffer_handle(server->handle), -1, target, msg);
+		else
+			irssi_send_message2(net_sendbuffer_handle(server->handle), network, chan, msg);
+	}
 }
 
-static void sig_own_public(SERVER_REC *server, const char *msg, const char *channel,
+static void sig_own_msg(SERVER_REC *server, const char *msg, const char *channel,
 	const char *orig_target) {
 	(void) msg;
 	(void) channel;
@@ -223,5 +231,6 @@ void quassel_irssi_topic(SERVER_REC* server, char* network, char *chan, char *to
 }
 
 void quassel_msgs_init(void) {
-	signal_add_first("message own_public", (SIGNAL_FUNC) sig_own_public);
+	signal_add_first("message own_public", (SIGNAL_FUNC) sig_own_msg);
+	signal_add_first("message own_private", (SIGNAL_FUNC) sig_own_msg);
 }
