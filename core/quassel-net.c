@@ -38,8 +38,10 @@ static void quassel_parse_incoming(Quassel_SERVER_REC* r) {
 		size = ntohl(size);
 		if(!size)
 			return;
-		r->size = size;
 		r->msg = malloc(size);
+		if(!r->msg)
+			return;
+		r->size = size;
 		r->got = 0;
 	}
 
