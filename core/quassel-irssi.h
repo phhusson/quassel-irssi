@@ -20,7 +20,10 @@ typedef struct Quassel_SERVER_REC_s {
 typedef struct Quassel_CHANNEL_REC_s {
 #include <channel-rec.h>
 	int buffer_id;
+	int first_msg_id;
 	int last_msg_id;
+
+	int got_backlog;
 } Quassel_CHANNEL_REC;
 
 #define STRUCT_SERVER_REC struct Quassel_SERVER_REC_s 

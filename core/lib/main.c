@@ -443,7 +443,7 @@ int parse_message(GIOChannel* h, char *buf, void* irssi_arg) {
 								if(strcmp(type_str, "Message"))
 									return 1;
 								struct message m = get_message(&buf);
-								handle_backlog(m);
+								handle_backlog(m, irssi_arg);
 							}
 							return 0;
 						}

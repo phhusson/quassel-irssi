@@ -48,7 +48,6 @@ struct buffer {
 };
 static struct buffer *buffers;
 static int n_buffers;
-static char *match;
 
 int quassel_find_buffer_id(char *name, uint32_t network) {
 	int i;
@@ -63,28 +62,6 @@ int quassel_find_buffer_id(char *name, uint32_t network) {
 
 void irssi_send_message(GIOChannel* h, int buffer, char *message) {
 	send_message(h, buffers[buffer].i, message);
-}
-
-//Returns buffer id for caching
-void irssi_send_message2(GIOChannel* h, int network, char* buffer, char *message) {
-	int res = quassel_find_buffer_id(buffer, network);
-	if(res == -1)
-		return;
-	send_message(h, buffers[res].i, message);
-}
-
-void handle_backlog(struct message m) {
-	if(!match)
-		return;
-	if(!strstr(m.content, match))
-		return;
-	char msg[512];
-	char *nick=strdup(m.sender);
-	if(index(nick, '!'))
-		*index(nick, '!')=0;
-	snprintf(msg, 511, "%s: %s", nick, m.content);
-	free(nick);
-	msg[511]=0;
 }
 
 char *stripname(char *str) {
@@ -104,6 +81,11 @@ char *stripname(char *str) {
 extern void irssi_quassel_handle(void* arg, int msgid, int buffer_id, int network, char* buf, char* sender, int type, int flags, char* content);
 void handle_message(struct message m, void *arg) {
 	irssi_quassel_handle(arg, m.id, m.buffer.id, m.buffer.network, m.buffer.name, m.sender, m.type, m.flags, m.content);
+}
+
+extern void irssi_quassel_backlog(void* arg, int msg_id, int timestamp, int bufferid, int network, char* buffer_id, char* sender, int type, int flags, char* content);
+void handle_backlog(struct message m, void *arg) {
+	irssi_quassel_backlog(arg, m.id, m.timestamp, m.buffer.id, m.buffer.network, m.buffer.name, m.sender, m.type, m.flags, m.content);
 }
 
 void handle_sync(object_t o, function_t f, ...) {

@@ -93,6 +93,8 @@ void irssi_quassel_handle(Quassel_SERVER_REC* r, int msg_id, int bufferid, int n
 	Quassel_CHANNEL_REC* chanrec = (Quassel_CHANNEL_REC*) channel_find(SERVER(r), chan);
 	if(!chanrec)
 		chanrec = (Quassel_CHANNEL_REC*) quassel_channel_create(SERVER(r), chan, chan, 0);
+	if(chanrec->first_msg_id == -1)
+		chanrec->first_msg_id = msg_id;
 	chanrec->last_msg_id = msg_id;
 	if(type == 1) {
 		char *recoded;
@@ -102,7 +104,7 @@ void irssi_quassel_handle(Quassel_SERVER_REC* r, int msg_id, int bufferid, int n
 			signal_emit("message own_public", 4, r, recoded, chan, NULL);
 		} else {
 			signal_emit("message public", 5,
-				r, recoded, nick, "coin", chan);
+					r, recoded, nick, "coin", chan);
 		}
 		g_free(recoded);
 	} else if(type == 0x08) {
@@ -157,8 +159,8 @@ end:
 	free(nick);
 }
 
-void irssi_send_message(GIOChannel* h, int buffer, const char *message);
-void irssi_send_message2(GIOChannel* h, int network, const char* buffer, const char *message);
+extern void irssi_send_message(GIOChannel* h, int buffer, const char *message);
+extern int quassel_find_buffer_id(const char *name, int network);
 void quassel_irssi_send_message(SERVER_REC *server, const char *target,
 			 const char *msg, int target_type) {
 	Quassel_CHANNEL_REC* chan_rec = (Quassel_CHANNEL_REC*) channel_find(server, target);
@@ -170,9 +172,9 @@ void quassel_irssi_send_message(SERVER_REC *server, const char *target,
 		char chan[256];
 		int network = 0;
 		if(sscanf(target, "%d-%255s", &network, chan) != 2)
-			irssi_send_message2(net_sendbuffer_handle(server->handle), -1, target, msg);
+			irssi_send_message(net_sendbuffer_handle(server->handle), quassel_find_buffer_id(target, -1), msg);
 		else
-			irssi_send_message2(net_sendbuffer_handle(server->handle), network, chan, msg);
+			irssi_send_message(net_sendbuffer_handle(server->handle), quassel_find_buffer_id(chan, network), msg);
 	}
 }
 
@@ -218,7 +220,6 @@ static void channel_change_topic(SERVER_REC *server, const char *channel,
 	signal_emit("channel topic changed", 1, chanrec);
 }
 
-extern int quassel_find_buffer_id(char *name, int network);
 void quassel_irssi_topic(SERVER_REC* server, char* network, char *chan, char *topic) {
 	char *s = channame(atoi(network), chan);
 	channel_change_topic(server, s, topic, "", time(NULL));

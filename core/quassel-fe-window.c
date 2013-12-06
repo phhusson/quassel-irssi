@@ -35,8 +35,52 @@ typedef struct {
 	struct _LINE_REC *insert_after;
 } GUI_WINDOW_REC;
 //fe-text/textbuffer.h
+typedef struct {
+	int level;
+	time_t time;
+} LINE_INFO_REC;
+typedef struct _LINE_REC {
+	/* Text in the line. \0 means that the next char will be a
+	   color or command.
+
+	   If the 7th bit is set, the lowest 7 bits are the command
+	   (see LINE_CMD_xxxx). Otherwise they specify a color change:
+
+	   Bit:
+            5 - Setting a background color
+            4 - Use "default terminal color"
+            0-3 - Color
+
+	   DO NOT ADD BLACK WITH \0\0 - this will break things. Use
+	   LINE_CMD_COLOR0 instead. */
+	struct _LINE_REC *prev, *next;
+
+	unsigned char *text;
+        LINE_INFO_REC info;
+} LINE_REC;
+typedef struct _TEXT_CHUNK_REC TEXT_CHUNK_REC;
+typedef struct {
+	GSList *text_chunks;
+        LINE_REC *first_line;
+        int lines_count;
+
+	LINE_REC *cur_line;
+	TEXT_CHUNK_REC *cur_text;
+
+	unsigned int last_eol:1;
+	int last_fg;
+	int last_bg;
+	int last_flags;
+} TEXT_BUFFER_REC;
 typedef struct _LINE_REC LINE_REC;
-//fe-text/textbuffer-view.h (not included in irssi-dev ?!?)
+LINE_REC *textbuffer_insert(TEXT_BUFFER_REC *buffer, LINE_REC *insert_after,
+			    const unsigned char *data, int len,
+			    LINE_INFO_REC *info);
+LINE_REC *textbuffer_append(TEXT_BUFFER_REC *buffer,
+			    const unsigned char *data, int len,
+			    LINE_INFO_REC *info);
+
+//fe-text/textbuffer-view.h
 /* Set a bookmark in view */
 typedef struct _TEXT_BUFFER_VIEW_REC TEXT_BUFFER_VIEW_REC;
 void textbuffer_view_set_bookmark(TEXT_BUFFER_VIEW_REC *view,                      
@@ -47,7 +91,45 @@ void textbuffer_view_set_bookmark_bottom(TEXT_BUFFER_VIEW_REC *view,
 /* Return the line for bookmark */                                                 
 LINE_REC *textbuffer_view_get_bookmark(TEXT_BUFFER_VIEW_REC *view,                 
 		const char *name);
+void textbuffer_view_insert_line(TEXT_BUFFER_VIEW_REC *view, LINE_REC *line);
 void textbuffer_view_remove_line(TEXT_BUFFER_VIEW_REC*, LINE_REC*);
+struct _TEXT_BUFFER_VIEW_REC {
+	TEXT_BUFFER_REC *buffer;
+	GSList *siblings; /* other views that use the same buffer */
+
+        struct _TERM_WINDOW *window;
+	int width, height;
+
+	int default_indent;
+        void* default_indent_func;
+	unsigned int longword_noindent:1;
+	unsigned int scroll:1; /* scroll down automatically when at bottom */
+	unsigned int utf8:1; /* use UTF8 in this view */
+
+	struct _TEXT_BUFFER_CACHE_REC *cache;
+	int ypos; /* cursor position - visible area is 0..height-1 */
+
+	LINE_REC *startline; /* line at the top of the screen */
+	int subline; /* number of "real lines" to skip from `startline' */
+
+        /* marks the bottom of the text buffer */
+	LINE_REC *bottom_startline;
+	int bottom_subline;
+
+	/* how many empty lines are in screen. a screenful when started
+	   or used /CLEAR */
+	int empty_linecount;
+        /* window is at the bottom of the text buffer */
+	unsigned int bottom:1;
+        /* if !bottom - new text has been printed since we were at bottom */
+	unsigned int more_text:1;
+        /* Window needs a redraw */
+	unsigned int dirty:1;
+
+	/* Bookmarks to the lines in the buffer - removed automatically
+	   when the line gets removed from buffer */
+        GHashTable *bookmarks;
+};
 
 #include "quassel-irssi.h"
 
@@ -60,16 +142,23 @@ static void quassel_chan_read(Quassel_CHANNEL_REC* chanrec) {
 	quassel_mark_as_read(giochan, chanrec->buffer_id);
 }
 
-void quassel_irssi_check_read(Quassel_CHANNEL_REC* chanrec) {
-	if(!active_win)
-		return;
-	WI_ITEM_REC *wi = active_win->active;
+static Quassel_CHANNEL_REC* window2chanrec(WINDOW_REC *window) {
+	if(!window)
+		return NULL;
+	WI_ITEM_REC *wi = window->active;
 	if(!wi)
+		return NULL;
+	Quassel_SERVER_REC *server = (Quassel_SERVER_REC*)wi->server;
+	if(!PROTO_CHECK_CAST(SERVER(server), Quassel_SERVER_REC, chat_type, "Quassel"))
+		return NULL;
+	Quassel_CHANNEL_REC *chanrec = (Quassel_CHANNEL_REC*) channel_find(SERVER(server), wi->visible_name);
+	return chanrec;
+}
+
+void quassel_irssi_check_read(Quassel_CHANNEL_REC* chanrec) {
+	if(!chanrec)
 		return;
-	Quassel_SERVER_REC *active_server = (Quassel_SERVER_REC*)wi->server;
-	if(!PROTO_CHECK_CAST(SERVER(active_server), Quassel_SERVER_REC, chat_type, "Quassel"))
-		return;
-	Quassel_CHANNEL_REC *active_chanrec = (Quassel_CHANNEL_REC*) channel_find(SERVER(active_server), wi->visible_name);
+	Quassel_CHANNEL_REC *active_chanrec = window2chanrec(active_win);
 	if(active_chanrec != chanrec)
 		return;
 
@@ -79,13 +168,7 @@ void quassel_irssi_check_read(Quassel_CHANNEL_REC* chanrec) {
 static void window_read(WINDOW_REC* win) {
 	if(!win)
 		return;
-	WI_ITEM_REC *wi = win->active;
-	if(!wi)
-		return;
-	Quassel_SERVER_REC *server = (Quassel_SERVER_REC*)wi->server;
-	if(!PROTO_CHECK_CAST(SERVER(server), Quassel_SERVER_REC, chat_type, "Quassel"))
-		return;
-	Quassel_CHANNEL_REC *chanrec = (Quassel_CHANNEL_REC*) channel_find(SERVER(server), wi->visible_name);
+	Quassel_CHANNEL_REC *chanrec = window2chanrec(win);
 	if(!chanrec)
 		return;
 
@@ -158,12 +241,94 @@ next:
 	}
 }
 
+int quassel_find_buffer_id(char *name, uint32_t network);
+void quassel_request_backlog(GIOChannel *h, int buffer, int first, int last, int limit, int additional);
+void cmd_qbacklog(const char *arg) {
+	(void)arg;
+	int n = atoi(arg);
+	n = n ? n : 10;
+	Quassel_CHANNEL_REC* chanrec = window2chanrec(active_win);
+	if(!chanrec)
+		return;
+
+	if(chanrec->buffer_id != -1)
+		quassel_request_backlog(chanrec->server->handle->handle, chanrec->buffer_id, -1, chanrec->first_msg_id, n, 0);
+
+	signal_stop();
+}
+
+extern void mainwindows_redraw(void);
+void irssi_quassel_backlog(Quassel_SERVER_REC* server, int msg_id, int timestamp, int bufferid, int network, char* buffer_id, char* sender, int type, int flags, char* content) {
+	(void) msg_id;
+	(void) bufferid;
+	(void) type;
+	(void) flags;
+
+	char *chan = channame(network, buffer_id);
+	char *nick = strdup(sender);
+	char *address;
+	if( (address=index(nick, '!')) != NULL)
+		*address = 0;
+	address++;
+
+	GSList *win = windows;
+	while(win) {
+		WINDOW_REC* winrec = (WINDOW_REC*) win->data;
+		if(winrec->active_server != SERVER(server) &&
+			winrec->connect_server != SERVER(server))
+			goto next;
+
+		if(!winrec->active)
+			goto next;
+
+		if(strcmp(winrec->active->visible_name, chan)!=0)
+			goto next;
+
+		if(!WINDOW_GUI(winrec) ||
+				!WINDOW_GUI(winrec)->view ||
+				!WINDOW_GUI(winrec)->view->buffer)
+			goto next;
+
+		LINE_INFO_REC lineinforec;
+		lineinforec.time=timestamp;
+		lineinforec.level = 0;
+
+		LINE_REC* pos = WINDOW_GUI(winrec)->view->buffer->first_line;
+		LINE_REC* before = pos;
+		for(; pos!=NULL; pos = pos->next) {
+			if(pos->info.time >= timestamp)
+				break;
+			before = pos;
+		}
+
+		unsigned char *data = NULL;
+		int len = asprintf((char**)&data, "%d:%s:%sxx", timestamp, nick, content);
+		data[len-2]=0;
+		data[len-1]=0x80;
+		LINE_REC *linerec = textbuffer_insert(WINDOW_GUI(winrec)->view->buffer, before, data, len, &lineinforec);
+		free(data);
+		textbuffer_view_insert_line(WINDOW_GUI(winrec)->view, linerec);
+		if(WINDOW_GUI(winrec)->insert_after)
+			WINDOW_GUI(winrec)->insert_after = linerec;
+
+		WINDOW_GUI(winrec)->view->dirty = 1;
+		winrec->last_line = time(NULL);
+
+		mainwindows_redraw();
+next:
+		win = g_slist_next(win);
+	}
+	free(nick);
+}
+
 void quassel_fewindow_init(void) {
 	signal_add("window changed", (SIGNAL_FUNC) sig_window_changed);
+	command_bind("qbacklog", NULL, (SIGNAL_FUNC) cmd_qbacklog);
 }
 
 void quassel_fewindow_deinit(void) {
 	signal_remove("window changed", (SIGNAL_FUNC) sig_window_changed);
+	command_unbind("qbacklog", (SIGNAL_FUNC) cmd_qbacklog);
 }
 
 
