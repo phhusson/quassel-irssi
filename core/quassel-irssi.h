@@ -22,6 +22,7 @@ typedef struct Quassel_CHANNEL_REC_s {
 	int buffer_id;
 	int first_msg_id;
 	int last_msg_id;
+	int last_seen_msg_id;
 
 	int got_backlog;
 } Quassel_CHANNEL_REC;

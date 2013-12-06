@@ -206,6 +206,7 @@ void quassel_irssi_set_last_seen_msg(void *arg, int buffer_id, int msgid) {
 	}
 	if(!chanrec)
 		return;
+	chanrec->last_seen_msg_id = msgid;
 
 	//Now find windows
 	GSList *win = windows;
@@ -246,13 +247,27 @@ void quassel_request_backlog(GIOChannel *h, int buffer, int first, int last, int
 void cmd_qbacklog(const char *arg) {
 	(void)arg;
 	int n = atoi(arg);
-	n = n ? n : 10;
 	Quassel_CHANNEL_REC* chanrec = window2chanrec(active_win);
 	if(!chanrec)
 		return;
 
-	if(chanrec->buffer_id != -1)
-		quassel_request_backlog(chanrec->server->handle->handle, chanrec->buffer_id, -1, chanrec->first_msg_id, n, 0);
+	int first = -1;
+	int additional = 0;
+	int last = chanrec->first_msg_id;
+	if(chanrec->last_seen_msg_id != -1) {
+		first = chanrec->last_seen_msg_id;
+		if(n) {
+			additional = 0;
+		} else {
+			additional = n;
+			n = 150;
+		}
+	} else {
+		n = n ? n : 10;
+	}
+	if(chanrec->buffer_id != -1) {
+		quassel_request_backlog(chanrec->server->handle->handle, chanrec->buffer_id, first, last, n, additional);
+	}
 
 	signal_stop();
 }

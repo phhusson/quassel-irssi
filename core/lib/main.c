@@ -190,7 +190,7 @@ int parse_message(GIOChannel* h, char *buf, void* irssi_arg) {
 
 							free(type_str);
 							int messageid = get_int(&buf);
-							handle_sync(BufferSyncer, SetLastSeenMsg, bufferid, messageid);
+							handle_sync(BufferSyncer, SetMarkerLine, bufferid, messageid);
 							return 0;
 						}
 					} else if(!strcmp(cmd_str, "IrcChannel")) {
@@ -672,6 +672,7 @@ int parse_message(GIOChannel* h, char *buf, void* irssi_arg) {
 										return 1;
 									int msgid=get_int(&buf);
 
+									quassel_irssi_set_last_seen_msg(irssi_arg, bufid, msgid);
 									handle_sync(BufferSyncer, SetLastSeenMsg, bufid, msgid);
 								}
 							} else {
