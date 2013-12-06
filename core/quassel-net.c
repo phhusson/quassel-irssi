@@ -121,6 +121,7 @@ void quassel_irssi_init_ack(Quassel_SERVER_REC *server) {
 	while( (error=irssi_ssl_handshake(ssl_handle)) & 1) {
 		if(error==-1) {
 			fprintf(stderr, "SSL handshake failed\n");
+			exit(1);
 		}
 	}
 	server->handle->handle = ssl_handle;
