@@ -242,35 +242,6 @@ next:
 	}
 }
 
-int quassel_find_buffer_id(char *name, uint32_t network);
-void quassel_request_backlog(GIOChannel *h, int buffer, int first, int last, int limit, int additional);
-void cmd_qbacklog(const char *arg) {
-	(void)arg;
-	int n = atoi(arg);
-	Quassel_CHANNEL_REC* chanrec = window2chanrec(active_win);
-	if(!chanrec)
-		return;
-
-	int first = -1;
-	int additional = 0;
-	int last = chanrec->first_msg_id;
-	if(chanrec->last_seen_msg_id != -1) {
-		first = chanrec->last_seen_msg_id;
-		if(n) {
-			additional = 0;
-		} else {
-			additional = n;
-			n = 150;
-		}
-	} else {
-		n = n ? n : 10;
-	}
-	if(chanrec->buffer_id != -1) {
-		quassel_request_backlog(chanrec->server->handle->handle, chanrec->buffer_id, first, last, n, additional);
-	}
-
-	signal_stop();
-}
 
 extern void mainwindows_redraw(void);
 void irssi_quassel_backlog(Quassel_SERVER_REC* server, int msg_id, int timestamp, int bufferid, int network, char* buffer_id, char* sender, int type, int flags, char* content) {
@@ -338,12 +309,8 @@ next:
 
 void quassel_fewindow_init(void) {
 	signal_add("window changed", (SIGNAL_FUNC) sig_window_changed);
-	command_bind("qbacklog", NULL, (SIGNAL_FUNC) cmd_qbacklog);
 }
 
 void quassel_fewindow_deinit(void) {
 	signal_remove("window changed", (SIGNAL_FUNC) sig_window_changed);
-	command_unbind("qbacklog", (SIGNAL_FUNC) cmd_qbacklog);
 }
-
-

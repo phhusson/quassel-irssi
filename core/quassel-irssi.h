@@ -58,9 +58,14 @@ static inline char *channame(int net, char *buf) {
 //quassel-msgs.c
 extern void quassel_irssi_send_message(SERVER_REC *server, const char *target, const char *msg, int target_type);
 extern void quassel_msgs_init(void);
+extern void quassel_msgs_deinit(void);
 
 //quassel-core.c
 CHANNEL_REC *quassel_channel_create(SERVER_REC *server, const char *name, const char *visible_name, int automatic);
+
+//quassel-cmds.c
+extern void quassel_cmds_init(void);
+extern void quassel_cmds_deinit(void);
 
 // lib
 void quassel_request_backlog(GIOChannel *h, int buffer, int first, int last, int limit, int additional);

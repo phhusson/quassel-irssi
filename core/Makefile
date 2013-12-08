@@ -15,7 +15,7 @@ LIBQUASSEL+=lib/getters.o lib/main.o lib/setters.o
 
 irssi/network-openssl.o: CFLAGS:=$(IRSSI_CFLAGS)
 
-libquassel_core.so: quassel-core.o quassel-net.o quassel-fe-window.o quassel-msgs.o irssi/network-openssl.o $(LIBQUASSEL)
+libquassel_core.so: quassel-core.o quassel-net.o quassel-fe-window.o quassel-msgs.o quassel-cmds.o irssi/network-openssl.o $(LIBQUASSEL)
 	gcc -shared $^ -o $@
 
 clean:

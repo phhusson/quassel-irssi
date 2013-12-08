@@ -235,3 +235,8 @@ void quassel_msgs_init(void) {
 	signal_add_first("message own_public", (SIGNAL_FUNC) sig_own_msg);
 	signal_add_first("message own_private", (SIGNAL_FUNC) sig_own_msg);
 }
+
+void quassel_msgs_deinit(void) {
+	signal_remove("message own_public", (SIGNAL_FUNC) sig_own_msg);
+	signal_remove("message own_private", (SIGNAL_FUNC) sig_own_msg);
+}
