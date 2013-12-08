@@ -16,6 +16,7 @@
  */
 
 #include <stdint.h>
+#include "quasselc.h"
 
 unsigned long long int lltob(unsigned long long int a) {
 	unsigned long long int ret = 0;

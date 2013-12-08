@@ -25,9 +25,6 @@ static void quassel_server_connect(SERVER_REC *server) {
 	}
 }
 
-extern void quassel_init_packet(GIOChannel*,int);
-extern void quassel_parse_message(GIOChannel*, char*, void*);
-
 static void quassel_parse_incoming(Quassel_SERVER_REC* r) {
 	GIOChannel *chan = net_sendbuffer_handle(r->handle);
 
@@ -56,7 +53,8 @@ static void quassel_parse_incoming(Quassel_SERVER_REC* r) {
 	server_unref((SERVER_REC*)r);
 }
 
-void irssi_handle_connected(Quassel_SERVER_REC* r) {
+void irssi_handle_connected(void* arg) {
+	Quassel_SERVER_REC *r = (Quassel_SERVER_REC*)arg;
 	r->connected = TRUE;
 }
 
@@ -115,9 +113,9 @@ void quassel_net_init(CHAT_PROTOCOL_REC* rec) {
 	signal_add_first("server connected", (SIGNAL_FUNC) sig_connected);
 }
 
-void quassel_login(GIOChannel* h, char *user, char *pass);
 GIOChannel *irssi_ssl_get_iochannel(GIOChannel *handle, int port, SERVER_REC *server);
-void quassel_irssi_init_ack(Quassel_SERVER_REC *server) {
+void quassel_irssi_init_ack(void *arg) {
+	Quassel_SERVER_REC *server = (Quassel_SERVER_REC*)arg;
 	if(!server->ssl)
 		goto login;
 	GIOChannel* ssl_handle = irssi_ssl_get_iochannel(server->handle->handle, 1337, SERVER(server));

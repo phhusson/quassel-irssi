@@ -26,8 +26,8 @@
 #include "quasselc.h"
 
 static iconv_t ico2;
-static void __init() __attribute__((constructor));
-static void __init() {
+static void __init(void) __attribute__((constructor));
+static void __init(void) {
 	ico2 = iconv_open("UTF-8", "UTF-16BE");
 }
 

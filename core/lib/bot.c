@@ -27,14 +27,14 @@
 #include <string.h>
 #include <iconv.h>
 #include "quasselc.h"
-
-void useless_printf(char *str, ...) {
-	(void)str;
-}
+#include "export.h"
 
 #if 0
 #define dprintf(x...) printf(x)
 #else
+static void useless_printf(char *str, ...) {
+	(void)str;
+}
 #define dprintf(x...) useless_printf(x)
 #endif
 
@@ -60,30 +60,14 @@ int quassel_find_buffer_id(char *name, uint32_t network) {
 	return -1;
 }
 
-void irssi_send_message(GIOChannel* h, int buffer, char *message) {
+void irssi_send_message(GIOChannel* h, int buffer, const char *message) {
 	send_message(h, buffers[buffer].i, message);
 }
 
-char *stripname(char *str) {
-	char *res=malloc(strlen(str));
-	char *tmp=res;
-	while(str[0]) {
-		if(isalnum(*str)) {
-			*tmp=*str;
-			tmp++;
-		}
-		++str;
-	}
-	*tmp=0;
-	return res;
-}
-
-extern void irssi_quassel_handle(void* arg, int msgid, int buffer_id, int network, char* buf, char* sender, int type, int flags, char* content);
 void handle_message(struct message m, void *arg) {
 	irssi_quassel_handle(arg, m.id, m.buffer.id, m.buffer.network, m.buffer.name, m.sender, m.type, m.flags, m.content);
 }
 
-extern void irssi_quassel_backlog(void* arg, int msg_id, int timestamp, int bufferid, int network, char* buffer_id, char* sender, int type, int flags, char* content);
 void handle_backlog(struct message m, void *arg) {
 	irssi_quassel_backlog(arg, m.id, m.timestamp, m.buffer.id, m.buffer.network, m.buffer.name, m.sender, m.type, m.flags, m.content);
 }

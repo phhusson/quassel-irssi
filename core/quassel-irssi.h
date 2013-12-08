@@ -1,6 +1,8 @@
 #ifndef QUASSEL_IRSSI_H
 #define QUASSEL_IRSSI_H
 
+#include "lib/export.h"
+
 #define STRUCT_SERVER_CONNECT_REC struct Quassel_SERVER_CONNECT_REC_s 
 typedef struct Quassel_SERVER_CONNECT_REC_s {
 #include <server-connect-rec.h>
@@ -38,7 +40,6 @@ typedef struct Quassel_QUERY_REC_s {
 
 
 //quassel-net.c
-extern void irssi_handle_connected(Quassel_SERVER_REC* r);
 extern void quassel_net_init(CHAT_PROTOCOL_REC* rec);
 extern void quassel_irssi_channels_join(SERVER_REC *server, const char *data, int automatic);
 extern void quassel_net_init(CHAT_PROTOCOL_REC* rec);
@@ -56,7 +57,7 @@ static inline char *channame(int net, char *buf) {
 }
 
 //quassel-msgs.c
-extern void quassel_irssi_send_message(SERVER_REC *server, const char *target, const char *msg, int target_type);
+extern void quassel_irssi_send_message(SERVER_REC *arg, const char *target, const char *msg, int target_type);
 extern void quassel_msgs_init(void);
 extern void quassel_msgs_deinit(void);
 
@@ -68,5 +69,14 @@ extern void quassel_cmds_init(void);
 extern void quassel_cmds_deinit(void);
 
 // lib
-void quassel_request_backlog(GIOChannel *h, int buffer, int first, int last, int limit, int additional);
+extern void quassel_request_backlog(GIOChannel *h, int buffer, int first, int last, int limit, int additional);
+extern void quassel_mark_as_read(GIOChannel*, int);
+extern void quassel_set_last_seen_msg(GIOChannel*, int, int);
+extern void irssi_send_message(GIOChannel* h, int buffer, const char *message);
+extern int quassel_find_buffer_id(const char *name, int network);
+
+//Used by irssi itself
+extern void quassel_core_init(void);
+extern void quassel_core_deinit(void);
+
 #endif /* QUASSEL_IRSSI_H */

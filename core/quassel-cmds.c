@@ -21,11 +21,6 @@
 
 #include "quassel-irssi.h"
 
-extern void irssi_send_message(GIOChannel* h, int buffer, const char *message);
-extern int quassel_find_buffer_id(const char *name, int network);
-extern void quassel_irssi_send_message(SERVER_REC *server, const char *target,
-			 const char *msg, int target_type);
-
 static void cmd_quote(const char *arg, Quassel_SERVER_REC* server, WI_ITEM_REC* wi) {
 	char *cmd = NULL;
 	int len = asprintf(&cmd, "/%s", arg);
@@ -34,8 +29,7 @@ static void cmd_quote(const char *arg, Quassel_SERVER_REC* server, WI_ITEM_REC* 
 	free(cmd);
 }
 
-void quassel_request_backlog(GIOChannel *h, int buffer, int first, int last, int limit, int additional);
-void cmd_qbacklog(const char *arg, Quassel_SERVER_REC *server, WI_ITEM_REC* wi) {
+static void cmd_qbacklog(const char *arg, Quassel_SERVER_REC *server, WI_ITEM_REC* wi) {
 	(void)arg;
 	int n = atoi(arg);
 	Quassel_CHANNEL_REC* chanrec = (Quassel_CHANNEL_REC*) channel_find(SERVER(server), wi->visible_name);

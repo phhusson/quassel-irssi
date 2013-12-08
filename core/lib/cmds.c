@@ -24,12 +24,11 @@
 #include <string.h>
 #include <iconv.h>
 #include "quasselc.h"
+#include "export.h"
 
 #include <common.h>
 #include <network.h>
 
-//Totally useless...
-//But still we'll do it
 void quassel_mark_as_read(GIOChannel* h, int buffer_id) {
 	char msg[2048];
 	int size = 0;
@@ -54,7 +53,6 @@ void quassel_mark_as_read(GIOChannel* h, int buffer_id) {
 
 	//'markBufferAsRead' bytearray
 	size += add_qvariant(msg+size, 12);
-	//size += add_bytearray(msg+size, "markBufferAsRead");
 	size += add_bytearray(msg+size, "requestMarkBufferAsRead");
 
 	//BufferId type
@@ -169,7 +167,7 @@ void HeartbeatReply(GIOChannel* h) {
 	net_transmit(h, msg, size);
 }
 
-void send_message(GIOChannel*h, struct bufferinfo b, char *message) {
+void send_message(GIOChannel*h, struct bufferinfo b, const char *message) {
 	//HeartBeat
 	char msg[2048];
 	int size;

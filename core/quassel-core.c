@@ -64,7 +64,7 @@ void quassel_irssi_channels_join(SERVER_REC *server, const char *data,
 	quassel_channel_create(server, data, data, automatic);
 }
 
-QUERY_REC* quassel_query_create(const char *server_tag, const char* nick, int automatic) {
+static QUERY_REC* quassel_query_create(const char *server_tag, const char* nick, int automatic) {
 	Quassel_QUERY_REC *rec = g_new0(Quassel_QUERY_REC, 1);
 	rec->chat_type = Quassel_PROTOCOL;
 	rec->name = g_strdup(nick);
@@ -73,7 +73,6 @@ QUERY_REC* quassel_query_create(const char *server_tag, const char* nick, int au
 
 	return (QUERY_REC*)rec;
 }
-
 
 void quassel_core_init(void) {
 	CHAT_PROTOCOL_REC *rec;
@@ -86,10 +85,10 @@ void quassel_core_init(void) {
 	rec->create_chatnet = create_chatnet;
 	rec->create_server_setup = create_server_setup;
 	rec->create_server_connect = create_server_connect;
-    rec->create_channel_setup = create_channel_setup;
-    rec->destroy_server_connect = destroy_server_connect;
+	rec->create_channel_setup = create_channel_setup;
+	rec->destroy_server_connect = destroy_server_connect;
 
-    rec->query_create = quassel_query_create;
+	rec->query_create = quassel_query_create;
 
 	rec->channel_create = quassel_channel_create;
 
@@ -97,14 +96,14 @@ void quassel_core_init(void) {
 	command_set_options("server add", "-quassel");
 
 	quassel_net_init(rec);
-    chat_protocol_register(rec);
-    g_free(rec);
+	chat_protocol_register(rec);
+	g_free(rec);
 
 	quassel_fewindow_init();
 	quassel_msgs_init();
 	quassel_cmds_init();
 
-    module_register("quassel", "core");
+	module_register("quassel", "core");
 }
 
 void quassel_core_deinit(void) {

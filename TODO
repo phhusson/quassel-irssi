@@ -3,15 +3,9 @@ Bugs:
 -Queries are partially handled as channels. (makes nickcolor pick a random color in a query)
 
 Features:
--/me
--/ctcp
 -Properly render backlog
 -Automatic backlog (better be an external perl script)
 -Only !hidden buffers
 
 Coding dirts:
--Part of irssi headers are copy/pasted in source code
 -There should be no communication between lib/main.c and quassel-irssi itself.
--quassel-fe-windows.c is becoming too big
--lib function provided to the module doesn't have headers
--Same thing for the other way around

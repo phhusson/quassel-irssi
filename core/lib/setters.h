@@ -1,10 +1,10 @@
 #ifndef SETTERS_H
 #define SETTERS_
 
-char *convert_string(char *str, int *size);
+//char *convert_string(char *str, int *size);
 
-int add_string(char *msg, char *str);
-int add_bytearray(char *msg, char *str);
+int add_string(char *msg, const char *str);
+int add_bytearray(char *msg, const char *str);
 int add_int(char *msg, uint32_t v);
 int add_short(char *msg, uint16_t v);
 int add_qvariant(char *msg, int type);

@@ -27,17 +27,13 @@
 #include <iconv.h>
 
 #include "quasselc.h"
-//IRSSI
+#include "export.h"
+
+//IRSSI: Used only for write function
 #include <common.h>
 #include <network.h>
 
-void irssi_handle_connected(void*);
-
-extern void quassel_irssi_topic(void *arg, char *network, char *chan, char *topic);
-extern void quassel_irssi_join(void* arg, char* network, char *chan, char* nick, char* mode);
-extern void quassel_irssi_joined(void* arg, char* network, char *chan);
-
-void handle_irc_users_and_channels(void *arg, char** buf, char *network) {
+static void handle_irc_users_and_channels(void *arg, char** buf, char *network) {
 	if(get_qvariant(buf) != 8)
 		return;
 	int len = get_int(buf);
@@ -83,9 +79,7 @@ void handle_irc_users_and_channels(void *arg, char** buf, char *network) {
 	}
 }
 
-extern void quassel_irssi_set_last_seen_msg(void *irssi_arg, int bufferid, int msgid);
-extern void quassel_irssi_init_ack(void *irssi_arg);
-int parse_message(GIOChannel* h, char *buf, void* irssi_arg) {
+int quassel_parse_message(GIOChannel* h, char *buf, void* irssi_arg) {
 	int type=get_qvariant(&buf);
 	if(type==9) {
 		//List, "normal" mode
@@ -792,22 +786,6 @@ int parse_message(GIOChannel* h, char *buf, void* irssi_arg) {
 	return 1;
 }
 
-int write_io(GIOChannel* h, char *b, int n) {
-	GIOStatus status;
-	gsize ret;
-	GError *err = NULL;
-
-	status = g_io_channel_write_chars(h, b, n, &ret, &err);
-	if(err != NULL) {
-		g_warning("%s", err->message);
-		g_error_free(err);
-	}
-	if(status == G_IO_STATUS_ERROR || status == G_IO_STATUS_EOF) {
-		fprintf(stderr, "Toto\n");
-	}
-	return ret;
-}
-
 void quassel_init_packet(GIOChannel* h, int ssl) {
 	int size=0;
 	int elements=0;
@@ -845,8 +823,4 @@ void quassel_init_packet(GIOChannel* h, int ssl) {
 	v=htonl(elements);
 	net_transmit(h, (char*)&v, 4);
 	net_transmit(h, msg, size);
-}
-
-int quassel_parse_message(GIOChannel* h, char *buf, void *arg) {
-	return parse_message(h, buf, arg);
 }

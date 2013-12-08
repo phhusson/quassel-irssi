@@ -7,7 +7,7 @@ IRSSI_CFLAGS+=-I$(IRSSI_INCLUDE)/src/fe-text/
 IRSSI_CFLAGS+=$(shell pkg-config glib-2.0 --cflags)
 IRSSI_CFLAGS+=-DUOFF_T_LONG -fPIC -DHAVE_OPENSSL
 
-CFLAGS=-std=gnu11 -Wall -Wextra -Werror -g -O2 $(IRSSI_CFLAGS)
+CFLAGS=-std=gnu11 -Wall -Wextra -Werror -g -O2 $(IRSSI_CFLAGS) -Wmissing-prototypes -Wmissing-declarations
 all: libquassel_core.so
 
 LIBQUASSEL:=lib/bot.o lib/cmds.o lib/display.o lib/endian.o
