@@ -61,7 +61,7 @@ end:
 	free(_chan);
 }
 
-void irssi_quassel_handle(void* arg, int msg_id, int bufferid, int network, char* buffer_id, char* sender, int type, int flags, char* content) {
+void quassel_irssi_handle(void* arg, int msg_id, int bufferid, int network, char* buffer_id, char* sender, int type, int flags, char* content) {
 	(void)flags;
 	Quassel_SERVER_REC *r = (Quassel_SERVER_REC*) arg;
 	char *chan = channame(network, buffer_id);
@@ -166,14 +166,14 @@ void quassel_irssi_send_message(SERVER_REC *server, const char *target,
 	(void) target_type;
 	
 	if(chan_rec && chan_rec->buffer_id != -1) {
-		irssi_send_message(net_sendbuffer_handle(server->handle), chan_rec->buffer_id, msg);
+		quassel_send_message(net_sendbuffer_handle(server->handle), chan_rec->buffer_id, msg);
 	} else {
 		char chan[256];
 		int network = 0;
 		if(sscanf(target, "%d-%255s", &network, chan) != 2)
-			irssi_send_message(net_sendbuffer_handle(server->handle), quassel_find_buffer_id(target, -1), msg);
+			quassel_send_message(net_sendbuffer_handle(server->handle), quassel_find_buffer_id(target, -1), msg);
 		else
-			irssi_send_message(net_sendbuffer_handle(server->handle), quassel_find_buffer_id(chan, network), msg);
+			quassel_send_message(net_sendbuffer_handle(server->handle), quassel_find_buffer_id(chan, network), msg);
 	}
 }
 

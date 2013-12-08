@@ -1,8 +1,7 @@
 #ifndef GETTERS_H
 #define GETTERS_H
 
-char *convert_back(char *str, int orig_size, int *size);
-
+char *convert_back(char *str, int orig_size, int* size);
 struct bufferinfo get_bufferinfo(char **buf);
 struct message get_message(char **buf);
 char* get_bytearray(char **buf);

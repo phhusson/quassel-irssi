@@ -721,7 +721,7 @@ int quassel_parse_message(GIOChannel* h, char *buf, void* irssi_arg) {
 					quassel_irssi_init_ack(irssi_arg);
 					return 0;
 				} else if(strcmp(category, "SessionInit")==0) {
-					irssi_handle_connected(irssi_arg);
+					quassel_irssi_handle_connected(irssi_arg);
 					//Get buffers' display status
 					initRequest(h, "BufferViewConfig", "0");
 					//Retreive marker lines and last seen msg

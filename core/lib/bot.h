@@ -7,9 +7,6 @@ void handle_message(struct message m, void*);
 void handle_backlog(struct message m, void*);
 void handle_fd(int fd);
 
-void quassel_request_backlog2(GIOChannel *h, int network, char *chan, int first, int last, int limit, int additional);
-int quassel_find_buffer_id(char *name, uint32_t network);
-
 typedef enum {
 	BufferSyncer,
 	IrcChannel,

@@ -68,13 +68,6 @@ CHANNEL_REC *quassel_channel_create(SERVER_REC *server, const char *name, const 
 extern void quassel_cmds_init(void);
 extern void quassel_cmds_deinit(void);
 
-// lib
-extern void quassel_request_backlog(GIOChannel *h, int buffer, int first, int last, int limit, int additional);
-extern void quassel_mark_as_read(GIOChannel*, int);
-extern void quassel_set_last_seen_msg(GIOChannel*, int, int);
-extern void irssi_send_message(GIOChannel* h, int buffer, const char *message);
-extern int quassel_find_buffer_id(const char *name, int network);
-
 //Used by irssi itself
 extern void quassel_core_init(void);
 extern void quassel_core_deinit(void);

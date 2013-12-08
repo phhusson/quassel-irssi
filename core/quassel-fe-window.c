@@ -131,7 +131,7 @@ next:
 
 
 extern void mainwindows_redraw(void);
-void irssi_quassel_backlog(void* arg, int msg_id, int timestamp, int bufferid, int network, char* buffer_id, char* sender, int type, int flags, char* content) {
+void quassel_irssi_backlog(void* arg, int msg_id, int timestamp, int bufferid, int network, char* buffer_id, char* sender, int type, int flags, char* content) {
 	(void) msg_id;
 	(void) bufferid;
 	(void) type;

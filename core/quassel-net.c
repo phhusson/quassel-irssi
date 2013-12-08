@@ -53,7 +53,7 @@ static void quassel_parse_incoming(Quassel_SERVER_REC* r) {
 	server_unref((SERVER_REC*)r);
 }
 
-void irssi_handle_connected(void* arg) {
+void quassel_irssi_handle_connected(void* arg) {
 	Quassel_SERVER_REC *r = (Quassel_SERVER_REC*)arg;
 	r->connected = TRUE;
 }
