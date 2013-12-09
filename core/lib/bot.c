@@ -72,7 +72,8 @@ void handle_backlog(struct message m, void *arg) {
 	quassel_irssi_backlog(arg, m.id, m.timestamp, m.buffer.id, m.buffer.network, m.buffer.name, m.sender, m.type, m.flags, m.content);
 }
 
-void handle_sync(object_t o, function_t f, ...) {
+
+void handle_sync(void* irssi_arg, object_t o, function_t f, ...) {
 	(void) o;
 	va_list ap;
 	char *fnc=NULL;
@@ -131,6 +132,7 @@ void handle_sync(object_t o, function_t f, ...) {
 			bufid=va_arg(ap, int);
 			msgid=va_arg(ap, int);
 			buffers[bufid].lastseen=msgid;
+			quassel_irssi_set_last_seen_msg(irssi_arg, bufid, msgid);
 			dprintf("%s(%d, %d)\n", fnc, bufid, msgid);
 			break;
 		case SetMarkerLine:
