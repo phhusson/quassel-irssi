@@ -93,23 +93,23 @@ void quassel_irssi_handle(void* arg, int msg_id, int bufferid, int network, char
 	address++;
 	//Text message
 	/*
-	   Plain(0x00001),                                                            
-	   Notice(0x00002),                                                           
-	   Action(0x00004),                                                           
-	   Nick(0x00008),                                                             
-	   Mode(0x00010),                                                             
-	   Join(0x00020),                                                             
-	   Part(0x00040),                                                             
-	   Quit(0x00080),                                                             
-	   Kick(0x00100),                                                             
-	   Kill(0x00200),                                                             
-	   Server(0x00400),                                                           
-	   Info(0x00800),                                                             
-	   Error(0x01000),                                                            
-	   DayChange(0x02000),                                                        
-	   Topic(0x04000),                                                            
-	   NetsplitJoin(0x08000),                                                     
-	   NetsplitQuit(0x10000),                                                     
+	   Plain(0x00001),
+	   Notice(0x00002),
+	   Action(0x00004),
+	   Nick(0x00008),
+	   Mode(0x00010),
+	   Join(0x00020),
+	   Part(0x00040),
+	   Quit(0x00080),
+	   Kick(0x00100),
+	   Kill(0x00200),
+	   Server(0x00400),
+	   Info(0x00800),
+	   Error(0x01000),
+	   DayChange(0x02000),
+	   Topic(0x04000),
+	   NetsplitJoin(0x08000),
+	   NetsplitQuit(0x10000),
 	   Invite(0x20000);
 	*/
 	Quassel_CHANNEL_REC* chanrec = (Quassel_CHANNEL_REC*) channel_find(SERVER(r), chan);
@@ -147,8 +147,6 @@ void quassel_irssi_handle(void* arg, int msg_id, int bufferid, int network, char
 			goto end;
 		nicklist_rename(SERVER(r), nick, content);
 		signal_emit("message nick", 4, SERVER(r), content, nick, address);
-	} else if(type == 0x10) {
-		//Change mode
 	} else if(type == 0x20) {
 		//Join
 		quassel_irssi_join2(r, chan, nick, "");
@@ -188,8 +186,30 @@ void quassel_irssi_handle(void* arg, int msg_id, int bufferid, int network, char
 		//Topic
 		//Formatted string... better use IrcChannel::setTopic
 	} else /*if(type == 0x400) */{
+		//TODO:
+		/*
+		   Mode(0x00010),
+		   Kill(0x00200),
+		   Server(0x00400),
+		   Info(0x00800),
+		   Error(0x01000),
+		   DayChange(0x02000),
+		   NetsplitJoin(0x08000),
+		   NetsplitQuit(0x10000),
+		   Invite(0x20000);
+		 */
 		char *str = NULL;
-		int len = asprintf(&str, "%d:%s:%s", type, sender, content);
+		char *type_str = NULL;
+		type_str = type == 0x10 ? "Mode" :
+			type == 0x200 ? "Kill" :
+			type == 0x400 ? "Server" :
+			type == 0x800 ? "Info" :
+			type == 0x1000 ? "Error" :
+			type == 0x2000 ? "DayChange" :
+			type == 0x8000 ? "NetsplitJoin" :
+			type == 0x10000 ? "NetsplitQuit" :
+			type == 0x20000 ? "Invite" : "Unknown type";
+		int len = asprintf(&str, "%s:%s:%s", type_str, sender, content);
 		(void)len;
 		chanrec->buffer_id = bufferid;
 		signal_emit("message public", 5,
