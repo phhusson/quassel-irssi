@@ -43,16 +43,16 @@ static void quassel_irssi_join2(void* arg, char* _chan, char* nick,
 	nicklist_insert(CHANNEL(chan_rec), rec);
 }
 
-void quassel_irssi_join(void* arg, char* network,
+void quassel_irssi_join(void* arg, int network,
 		char *chan, char* nick,
 		char* mode) {
-	char *_chan = channame(atoi(network), chan);
+	char *_chan = channame(network, chan);
 	quassel_irssi_join2(arg, _chan, nick, mode);
 	free(_chan);
 }
 
-void quassel_irssi_joined(void* arg, char* network, char *chan) {
-	char *_chan = channame(atoi(network), chan);
+void quassel_irssi_joined(void* arg, int network, char *chan) {
+	char *_chan = channame(network, chan);
 	Quassel_CHANNEL_REC* chan_rec = (Quassel_CHANNEL_REC*) channel_find(SERVER(arg), _chan);
 	if(!chan_rec) goto end;
 	signal_emit("message join", 4, SERVER(arg), _chan, SERVER(arg)->nick, "quassel@irssi");
@@ -219,16 +219,16 @@ static void channel_change_topic(SERVER_REC *server, const char *channel,
 	signal_emit("channel topic changed", 1, chanrec);
 }
 
-void quassel_irssi_topic(void* arg, char* network, char *chan, char *topic) {
+void quassel_irssi_topic(void* arg, int network, char *chan, char *topic) {
 	Quassel_SERVER_REC *server = (Quassel_SERVER_REC*)arg;
-	char *s = channame(atoi(network), chan);
+	char *s = channame(network, chan);
 	channel_change_topic(SERVER(server), s, topic, "", time(NULL));
 	Quassel_CHANNEL_REC* chanrec = (Quassel_CHANNEL_REC*)channel_find(SERVER(server), s);
 	free(s);
 	if(!chanrec)
 		return;
 	if(chanrec->buffer_id == -1)
-		chanrec->buffer_id = quassel_find_buffer_id(chan, atoi(network));
+		chanrec->buffer_id = quassel_find_buffer_id(chan, network);
 }
 
 void quassel_msgs_init(void) {

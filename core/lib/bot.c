@@ -228,3 +228,49 @@ void handle_sync(void* irssi_arg, object_t o, function_t f, ...) {
 	}
 	va_end(ap);
 }
+
+void handle_event(void* arg, GIOChannel *h, event_t t, ...) {
+	va_list ap;
+	va_start(ap, t);
+
+	int net;
+	char *chan;
+	char *topic;
+	char *nick;
+	char *mode;
+	switch(t) {
+		case ClientInitAck:
+			quassel_irssi_init_ack(arg);
+			break;
+
+		case SessionInit:
+			//Get buffers' display status
+			initRequest(h, "BufferViewConfig", "0");
+			//Retrieve marker lines and last seen msgs
+			initRequest(h, "BufferSyncer", "");
+			quassel_irssi_handle_connected(arg);
+			break;
+
+		case TopicChange:
+			net = va_arg(ap, int);
+			chan = va_arg(ap, char*);
+			topic = va_arg(ap, char*);
+			quassel_irssi_topic(arg, net, chan, topic);
+			break;
+
+		case ChanPreAddUser:
+			net = va_arg(ap, int);
+			chan = va_arg(ap, char*);
+			nick = va_arg(ap, char*);
+			mode = va_arg(ap, char*);
+			quassel_irssi_join(arg, net, chan, nick, mode);
+			break;
+
+		case ChanReady:
+			net = va_arg(ap, int);
+			chan = va_arg(ap, char*);
+			quassel_irssi_joined(arg, net, chan);
+			break;
+	}
+	va_end(ap);
+}

@@ -33,10 +33,11 @@
 #include <common.h>
 #include <network.h>
 
-static void handle_irc_users_and_channels(void *arg, char** buf, char *network) {
+static void handle_irc_users_and_channels(void *extarg, GIOChannel* h, char** buf, char *network) {
 	if(get_qvariant(buf) != 8)
 		return;
 	int len = get_int(buf);
+	int netid = atoi(network);
 	for(int i=0; i<len; ++i) {
 
 		char *key = get_string(buf);
@@ -55,7 +56,7 @@ static void handle_irc_users_and_channels(void *arg, char** buf, char *network) 
 						if(get_qvariant(buf) != 10)
 							return;
 						char *topic = get_string(buf);
-						quassel_irssi_topic(arg, network, channame, topic);
+						handle_event(extarg, h, TopicChange, netid, channame, topic);
 					} else if(strcmp(key, "UserModes") == 0) {
 						if(get_qvariant(buf) != 8)
 							return;
@@ -66,12 +67,12 @@ static void handle_irc_users_and_channels(void *arg, char** buf, char *network) 
 							if(type != 10)
 								return;
 							char *modes = get_string(buf);
-							quassel_irssi_join(arg, network, channame, key, modes);
+							handle_event(extarg, h, ChanPreAddUser, netid, channame, key, modes);
 						}
 					} else
 						get_variant(buf);
 				}
-				quassel_irssi_joined(arg, network, channame);
+				handle_event(extarg, h, ChanReady, netid, channame);
 				free(channame);
 			}
 		} else
@@ -79,7 +80,7 @@ static void handle_irc_users_and_channels(void *arg, char** buf, char *network) 
 	}
 }
 
-int quassel_parse_message(GIOChannel* h, char *buf, void* irssi_arg) {
+int quassel_parse_message(GIOChannel* h, char *buf, void* extarg) {
 	int type=get_qvariant(&buf);
 	if(type==9) {
 		//List, "normal" mode
@@ -136,7 +137,7 @@ int quassel_parse_message(GIOChannel* h, char *buf, void* irssi_arg) {
 							free(type_str);
 
 							int id = get_int(&buf);
-							handle_sync(irssi_arg, BufferSyncer, MarkBufferAsRead, id);
+							handle_sync(extarg, BufferSyncer, MarkBufferAsRead, id);
 							return 0;
 						} else if(!strcmp(fnc, "setLastSeenMsg")) {
 							//BufferSyncer::setLastSeenMsg(int, int)
@@ -159,7 +160,7 @@ int quassel_parse_message(GIOChannel* h, char *buf, void* irssi_arg) {
 								return 1;
 							free(type_str);
 							int messageid = get_int(&buf);
-							handle_sync(irssi_arg, BufferSyncer, SetLastSeenMsg, bufferid, messageid);
+							handle_sync(extarg, BufferSyncer, SetLastSeenMsg, bufferid, messageid);
 							return 0;
 						} else if(!strcmp(fnc, "setMarkerLine")) {
 							//BufferSyncer::setMarkerLine(int, int)
@@ -183,7 +184,7 @@ int quassel_parse_message(GIOChannel* h, char *buf, void* irssi_arg) {
 
 							free(type_str);
 							int messageid = get_int(&buf);
-							handle_sync(irssi_arg, BufferSyncer, SetMarkerLine, bufferid, messageid);
+							handle_sync(extarg, BufferSyncer, SetMarkerLine, bufferid, messageid);
 							return 0;
 						}
 					} else if(!strcmp(cmd_str, "IrcChannel")) {
@@ -223,7 +224,7 @@ int quassel_parse_message(GIOChannel* h, char *buf, void* irssi_arg) {
 								char *mode=get_string(&buf);
 								modes[i]=mode;
 							}
-							handle_sync(irssi_arg, IrcChannel, JoinIrcUsers, network, chan, size, users, modes);
+							handle_sync(extarg, IrcChannel, JoinIrcUsers, network, chan, size, users, modes);
 							free(network);
 							for(i=0;i<size;++i) {
 								free(users[i]);
@@ -245,7 +246,7 @@ int quassel_parse_message(GIOChannel* h, char *buf, void* irssi_arg) {
 								return 1;
 							char *mode=get_string(&buf);
 
-							handle_sync(irssi_arg, IrcChannel, AddUserMode, network, chan, nick, mode);
+							handle_sync(extarg, IrcChannel, AddUserMode, network, chan, nick, mode);
 							free(nick);
 							free(mode);
 							free(network);
@@ -263,7 +264,7 @@ int quassel_parse_message(GIOChannel* h, char *buf, void* irssi_arg) {
 								return 1;
 							char *mode=get_string(&buf);
 
-							handle_sync(irssi_arg, IrcChannel, RemoveUserMode, network, chan, nick, mode);
+							handle_sync(extarg, IrcChannel, RemoveUserMode, network, chan, nick, mode);
 							free(nick);
 							free(mode);
 							free(network);
@@ -286,7 +287,7 @@ int quassel_parse_message(GIOChannel* h, char *buf, void* irssi_arg) {
 
 						if(!strcmp(fnc, "quit")) {
 							//IrcUser::quit();
-							handle_sync(irssi_arg, IrcUser, Quit, network, nick);
+							handle_sync(extarg, IrcUser, Quit, network, nick);
 							free(fnc);
 							free(network);
 							return 0;
@@ -297,7 +298,7 @@ int quassel_parse_message(GIOChannel* h, char *buf, void* irssi_arg) {
 							if(type!=10)
 								return 1;
 							char *srv=get_string(&buf);
-							handle_sync(irssi_arg, IrcUser, SetServer, network, nick, srv);
+							handle_sync(extarg, IrcUser, SetServer, network, nick, srv);
 							free(srv);
 							free(network);
 							return 0;
@@ -308,7 +309,7 @@ int quassel_parse_message(GIOChannel* h, char *buf, void* irssi_arg) {
 							if(type!=10)
 								return 1;
 							char *name=get_string(&buf);
-							handle_sync(irssi_arg, IrcUser, SetRealName, network, nick, name);
+							handle_sync(extarg, IrcUser, SetRealName, network, nick, name);
 							free(name);
 							free(network);
 							return 0;
@@ -319,7 +320,7 @@ int quassel_parse_message(GIOChannel* h, char *buf, void* irssi_arg) {
 							if(type!=1)
 								return 1;
 							int away=get_byte(&buf);
-							handle_sync(irssi_arg, IrcUser, SetAway, network, nick, away);
+							handle_sync(extarg, IrcUser, SetAway, network, nick, away);
 							free(network);
 							return 0;
 						} else if(!strcmp(fnc, "setNick")) {
@@ -331,7 +332,7 @@ int quassel_parse_message(GIOChannel* h, char *buf, void* irssi_arg) {
 							if(type!=10)
 								return 1;
 							char *nick=get_string(&buf);
-							handle_sync(irssi_arg, IrcUser, SetNick2, network, nick);
+							handle_sync(extarg, IrcUser, SetNick2, network, nick);
 							free(nick);
 							free(network);
 							return 0;
@@ -342,7 +343,7 @@ int quassel_parse_message(GIOChannel* h, char *buf, void* irssi_arg) {
 							if(type!=10)
 								return 1;
 							char *chan=get_string(&buf);
-							handle_sync(irssi_arg, IrcUser, PartChannel, network, nick, chan);
+							handle_sync(extarg, IrcUser, PartChannel, network, nick, chan);
 							free(chan);
 							free(network);
 							return 0;
@@ -357,7 +358,7 @@ int quassel_parse_message(GIOChannel* h, char *buf, void* irssi_arg) {
 							if(type!=10)
 								return 1;
 							char *fullname=get_string(&buf);
-							handle_sync(irssi_arg, Network, AddIrcUser, arg, fullname);
+							handle_sync(extarg, Network, AddIrcUser, arg, fullname);
 							free(fullname);
 							free(arg);
 							return 0;
@@ -368,7 +369,7 @@ int quassel_parse_message(GIOChannel* h, char *buf, void* irssi_arg) {
 							if(type!=2)
 								return 1;
 							int latency=get_int(&buf);
-							handle_sync(irssi_arg, Network, SetLatency, arg, latency);
+							handle_sync(extarg, Network, SetLatency, arg, latency);
 							free(arg);
 							return 0;
 						}
@@ -436,7 +437,7 @@ int quassel_parse_message(GIOChannel* h, char *buf, void* irssi_arg) {
 								if(strcmp(type_str, "Message"))
 									return 1;
 								struct message m = get_message(&buf);
-								handle_backlog(m, irssi_arg);
+								handle_backlog(m, extarg);
 							}
 							return 0;
 						}
@@ -472,7 +473,7 @@ int quassel_parse_message(GIOChannel* h, char *buf, void* irssi_arg) {
 							return 1;
 						}
 						struct message m = get_message(&buf);
-						handle_message(m, irssi_arg);
+						handle_message(m, extarg);
 						free(cmd_str);
 						return 0;
 					} else if(!strcmp(cmd_str, "__objectRenamed__")) {
@@ -503,7 +504,7 @@ int quassel_parse_message(GIOChannel* h, char *buf, void* irssi_arg) {
 							if(!index(new, '/'))
 								return 1;
 							new_nick=index(new, '/')+1;
-							handle_sync(irssi_arg, IrcUser, SetNick, net, orig, new_nick);
+							handle_sync(extarg, IrcUser, SetNick, net, orig, new_nick);
 							free(new);
 							free(net);
 							return 0;
@@ -557,7 +558,7 @@ int quassel_parse_message(GIOChannel* h, char *buf, void* irssi_arg) {
 									if(strcmp(type_str, "BufferId"))
 										return 1;
 									int bufid=get_int(&buf);
-									handle_sync(irssi_arg, BufferSyncer, TempRemoved, bufid);
+									handle_sync(extarg, BufferSyncer, TempRemoved, bufid);
 								}
 							} else if(!strcmp(key, "RemovedBuffers")) {
 								type=get_qvariant(&buf);
@@ -573,7 +574,7 @@ int quassel_parse_message(GIOChannel* h, char *buf, void* irssi_arg) {
 									if(strcmp(type_str, "BufferId"))
 										return 1;
 									int bufid=get_int(&buf);
-									handle_sync(irssi_arg, BufferSyncer, Removed, bufid);
+									handle_sync(extarg, BufferSyncer, Removed, bufid);
 								}
 							} else if(!strcmp(key, "BufferList")) {
 								type=get_qvariant(&buf);
@@ -589,7 +590,7 @@ int quassel_parse_message(GIOChannel* h, char *buf, void* irssi_arg) {
 									if(strcmp(type_str, "BufferId"))
 										return 1;
 									int bufid=get_int(&buf);
-									handle_sync(irssi_arg, BufferSyncer, Displayed, bufid);
+									handle_sync(extarg, BufferSyncer, Displayed, bufid);
 								}
 							} else {
 								get_variant(&buf);
@@ -638,7 +639,7 @@ int quassel_parse_message(GIOChannel* h, char *buf, void* irssi_arg) {
 										return 1;
 									int msgid=get_int(&buf);
 
-									handle_sync(irssi_arg, BufferSyncer, SetMarkerLine, bufid, msgid);
+									handle_sync(extarg, BufferSyncer, SetMarkerLine, bufid, msgid);
 								}
 							} else if(!strcmp(key, "LastSeenMsg")) {
 								type=get_qvariant(&buf);
@@ -665,7 +666,7 @@ int quassel_parse_message(GIOChannel* h, char *buf, void* irssi_arg) {
 										return 1;
 									int msgid=get_int(&buf);
 
-									handle_sync(irssi_arg, BufferSyncer, SetLastSeenMsg, bufid, msgid);
+									handle_sync(extarg, BufferSyncer, SetLastSeenMsg, bufid, msgid);
 								}
 							} else {
 								get_variant(&buf);
@@ -683,7 +684,7 @@ int quassel_parse_message(GIOChannel* h, char *buf, void* irssi_arg) {
 						for(int i=0; i<len; ++i) {
 							char *varname = get_string(&buf);
 							if(strcmp(varname, "IrcUsersAndChannels") == 0) {
-								handle_irc_users_and_channels(irssi_arg, &buf, network_id);
+								handle_irc_users_and_channels(extarg, h, &buf, network_id);
 							} else
 								get_variant(&buf);
 						}
@@ -716,16 +717,10 @@ int quassel_parse_message(GIOChannel* h, char *buf, void* irssi_arg) {
 				char *category=get_string(&buf);
 				if(strcmp(category, "ClientInitAck")==0) {
 					//We can't go further here, because GIOChannel* h might have changed
-					quassel_irssi_init_ack(irssi_arg);
+					handle_event(extarg, h, ClientInitAck);
 					return 0;
 				} else if(strcmp(category, "SessionInit")==0) {
-					quassel_irssi_handle_connected(irssi_arg);
-					//Get buffers' display status
-					initRequest(h, "BufferViewConfig", "0");
-					//Retreive marker lines and last seen msg
-					initRequest(h, "BufferSyncer", "");
-					//initRequest(fd, "Network", "5");
-					//requestBacklog(fd, 29, -1, -1, 5, 0);
+					handle_event(extarg, h, SessionInit);
 				}
 				continue;
 			} else if(strcmp(key, "SessionState")==0) {
@@ -745,7 +740,7 @@ int quassel_parse_message(GIOChannel* h, char *buf, void* irssi_arg) {
 							get_qvariant(&buf);
 							get_bytearray(&buf);
 							struct bufferinfo m=get_bufferinfo(&buf);
-							handle_sync(irssi_arg, BufferSyncer, Create, m.id, m.network, m.type, m.group, m.name);
+							handle_sync(extarg, BufferSyncer, Create, m.id, m.network, m.type, m.group, m.name);
 						}
 						continue;
 					} else if(strcmp(key2, "NetworkIds") == 0) {

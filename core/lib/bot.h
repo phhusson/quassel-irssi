@@ -40,4 +40,13 @@ typedef enum {
 	SetLatency,		//(char *network_number, int latency); //unit ?
 } function_t;
 void handle_sync(void* arg, object_t o, function_t f, ...);
+
+typedef enum {
+	ClientInitAck,
+	SessionInit,
+	TopicChange,
+	ChanPreAddUser,
+	ChanReady,
+} event_t;
+void handle_event(void* arg, GIOChannel* h, event_t t, ...);
 #endif

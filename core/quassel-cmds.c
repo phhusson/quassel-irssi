@@ -61,7 +61,7 @@ static void cmd_self(const char *arg, Quassel_SERVER_REC* server, WI_ITEM_REC* w
 	char *cmd = NULL;
 	int len = asprintf(&cmd, "/%s %s", current_command, arg);
 	(void)len;
-	quassel_irssi_send_message(SERVER(server), wi->visible_name, cmd, 0);
+	quassel_irssi_send_message(SERVER(server), wi ? wi->visible_name: "", cmd, 0);
 	free(cmd);
 
 	signal_stop();
