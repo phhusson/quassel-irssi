@@ -49,6 +49,29 @@ struct buffer {
 static struct buffer *buffers;
 static int n_buffers;
 
+static void new_buffer(int bufid, int netid, short type, int group, char *name) {
+	if(bufid>=n_buffers) {
+		buffers=realloc(buffers, sizeof(struct buffer)*(bufid+1));
+		int i;
+		for(i=n_buffers;i<=bufid;++i)
+			buffers[i].i.id=-1;
+		n_buffers=bufid+1;
+	}
+	buffers[bufid].i.network=netid;
+	buffers[bufid].i.id=bufid;
+	buffers[bufid].i.type=type;
+	buffers[bufid].i.group=group;
+	buffers[bufid].i.name=name;
+	buffers[bufid].marker=0;
+	buffers[bufid].lastseen=0;
+	buffers[bufid].displayed=1;
+}
+
+static void may_new_buffer(int bufid, int netid, short type, int group, char* name) {
+	if(bufid>=n_buffers || (bufid>=0 && buffers[bufid].i.id != (uint32_t)-1))
+		new_buffer(bufid, netid, type, group, name);
+}
+
 int quassel_find_buffer_id(const char *name, uint32_t network) {
 	int i;
 	for(i=0;i<n_buffers;++i) {
@@ -65,6 +88,7 @@ void quassel_send_message(GIOChannel* h, int buffer, const char *message) {
 }
 
 void handle_message(struct message m, void *arg) {
+	may_new_buffer(m.buffer.id, m.buffer.network, m.buffer.type, m.buffer.group, strdup(m.buffer.name));
 	quassel_irssi_handle(arg, m.id, m.buffer.id, m.buffer.network, m.buffer.name, m.sender, m.type, m.flags, m.content);
 }
 
@@ -89,21 +113,7 @@ void handle_sync(void* irssi_arg, object_t o, function_t f, ...) {
 			int group=va_arg(ap, int);
 			name=va_arg(ap, char*);
 			dprintf("CreateBuffer(%d, %d, %d, %d, %s)\n", netid, bufid, type, group, name);
-			if(bufid>=n_buffers) {
-				buffers=realloc(buffers, sizeof(struct buffer)*(bufid+1));
-				int i;
-				for(i=n_buffers;i<=bufid;++i)
-					buffers[i].i.id=-1;
-				n_buffers=bufid+1;
-			}
-			buffers[bufid].i.network=netid;
-			buffers[bufid].i.id=bufid;
-			buffers[bufid].i.name=name;
-			buffers[bufid].i.type=type;
-			buffers[bufid].i.group=group;
-			buffers[bufid].marker=0;
-			buffers[bufid].lastseen=0;
-			buffers[bufid].displayed=1;
+			new_buffer(bufid, netid, type, group, name);
 			break;
 		case MarkBufferAsRead:
 			highlight=0;
