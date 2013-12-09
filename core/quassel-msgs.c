@@ -59,6 +59,7 @@ void quassel_irssi_joined(void* arg, int network, char *chan) {
 	char *_chan = channame(network, chan);
 	Quassel_CHANNEL_REC* chan_rec = (Quassel_CHANNEL_REC*) channel_find(SERVER(arg), _chan);
 	if(!chan_rec) goto end;
+	chan_rec->joined = 1;
 	signal_emit("message join", 4, SERVER(arg), _chan, SERVER(arg)->nick, "quassel@irssi");
 	signal_emit("channel joined", 1, chan_rec);
 end:
@@ -183,6 +184,9 @@ void quassel_irssi_handle(void* arg, int msg_id, int bufferid, int network, char
 			msg++;
 		}
 		signal_emit("message kick", 6, SERVER(r), chan, kicked, nick, address, msg);
+	} else if(type == 0x4000) {
+		//Topic
+		//Formatted string... better use IrcChannel::setTopic
 	} else /*if(type == 0x400) */{
 		char *str = NULL;
 		int len = asprintf(&str, "%d:%s:%s", type, sender, content);
@@ -251,7 +255,6 @@ static void channel_change_topic(SERVER_REC *server, const char *channel,
 	g_free(recoded);
 
 	g_free_not_null(chanrec->topic_by);
-	g_free_not_null(chanrec->topic_by);
 	chanrec->topic_by = g_strdup(setby);
 	
 	chanrec->topic_time = settime;
@@ -264,11 +267,13 @@ void quassel_irssi_topic(void* arg, int network, char *chan, char *topic) {
 	char *s = channame(network, chan);
 	channel_change_topic(SERVER(server), s, topic, "", time(NULL));
 	Quassel_CHANNEL_REC* chanrec = (Quassel_CHANNEL_REC*)channel_find(SERVER(server), s);
-	free(s);
 	if(!chanrec)
 		return;
 	if(chanrec->buffer_id == -1)
 		chanrec->buffer_id = quassel_find_buffer_id(chan, network);
+	if(chanrec->joined)
+		signal_emit("message topic", 5, server, s, topic, "someone", "");
+	free(s);
 }
 
 void quassel_msgs_init(void) {
