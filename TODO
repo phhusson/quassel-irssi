@@ -6,6 +6,3 @@ Features:
 -Properly render backlog
 -Automatic backlog (better be an external perl script)
 -Only !hidden buffers
-
-Coding dirts:
--There should be no communication between lib/main.c and quassel-irssi itself.

@@ -61,6 +61,9 @@ void quassel_irssi_handle_connected(void* arg) {
 static void sig_connected(Quassel_SERVER_REC* r) {
 	if(!PROTO_CHECK_CAST(SERVER(r), Quassel_SERVER_REC, chat_type, "Quassel"))
 		return;
+	g_io_channel_set_encoding(r->handle->handle, NULL, NULL);
+	g_io_channel_set_buffered(r->handle->handle, FALSE);
+
 	r->readtag =
 		g_input_add(net_sendbuffer_handle(r->handle),
 			    G_INPUT_READ,

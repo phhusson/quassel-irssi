@@ -8,14 +8,16 @@ IRSSI_CFLAGS+=$(shell pkg-config glib-2.0 --cflags)
 IRSSI_CFLAGS+=-DUOFF_T_LONG -fPIC -DHAVE_OPENSSL
 
 CFLAGS=-std=gnu11 -Wall -Wextra -Werror -g -O2 $(IRSSI_CFLAGS) -Wmissing-prototypes -Wmissing-declarations
+
 all: libquassel_core.so
 
-LIBQUASSEL:=lib/bot.o lib/cmds.o lib/display.o lib/endian.o
+LIBQUASSEL:=lib/cmds.o lib/display.o
 LIBQUASSEL+=lib/getters.o lib/main.o lib/setters.o
 
 irssi/network-openssl.o: CFLAGS:=$(IRSSI_CFLAGS)
+quasselc-connector.o: CFLAGS:=$(CFLAGS) -Ilib
 
-libquassel_core.so: quassel-core.o quassel-net.o quassel-fe-window.o quassel-msgs.o quassel-cmds.o irssi/network-openssl.o $(LIBQUASSEL)
+libquassel_core.so: quasselc-connector.o quassel-core.o quassel-net.o quassel-fe-window.o quassel-msgs.o quassel-cmds.o irssi/network-openssl.o $(LIBQUASSEL)
 	gcc -shared $^ -o $@
 
 clean:

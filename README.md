@@ -11,7 +11,10 @@ How to build
 ------------
 
     git clone https://github.com/phhusson/quassel-irssi.git
-    cd quassel-irssi/core
+    cd quassel-irssi
+    git submodule init
+    git submodule update
+    cd core
     make
     cp libquassel_core.so ~/.irssi.modules
 
