@@ -6,18 +6,22 @@
 #include <chat-protocols.h>
 #include <chatnets.h>
 #include <commands.h>
+#include <levels.h>
 #include <net-sendbuffer.h>
 #include <network.h>
+#include <nicklist.h>
+#include <printtext.h>
 #include <queries.h>
 #include <recode.h>
 #include <servers-setup.h>
-#include <nicklist.h>
 #include <servers.h>
 #include <settings.h>
 #include <signals.h>
 
 //fe-common/core
 #include <fe-windows.h>
+//fe-common/
+#include <irc/module-formats.h>
 
 #include "quassel-irssi.h"
 
@@ -59,6 +63,22 @@ void quassel_irssi_joined(void* arg, int network, char *chan) {
 	signal_emit("channel joined", 1, chan_rec);
 end:
 	free(_chan);
+}
+
+static void print_ctcpaction(Quassel_SERVER_REC *server, const char* content, const char* nick, const char* address, const char* target) {
+	/* channel action */
+	(void) content;
+	(void) address;
+	if(strcmp(active_win->active->visible_name, target) == 0) {
+		/* message to active channel in window */
+		printformat(server, target, MSGLEVEL_ACTIONS|MSGLEVEL_PUBLIC,
+				IRCTXT_ACTION_PUBLIC, nick, content);
+	} else {
+		/* message to not existing/active channel, or to @/+ */
+		printformat(server, target, MSGLEVEL_ACTIONS|MSGLEVEL_PUBLIC,
+				IRCTXT_ACTION_PUBLIC_CHANNEL,
+				nick, target, content);
+	}
 }
 
 void quassel_irssi_handle(void* arg, int msg_id, int bufferid, int network, char* buffer_id, char* sender, int type, int flags, char* content) {
@@ -108,6 +128,8 @@ void quassel_irssi_handle(void* arg, int msg_id, int bufferid, int network, char
 					r, recoded, nick, "coin", chan);
 		}
 		g_free(recoded);
+	} else if(type == 0x04) {
+		print_ctcpaction(r, content, nick, address, chan);
 	} else if(type == 0x08) {
 		//Nick
 		NICK_REC* nick_rec = nicklist_find((CHANNEL_REC*)chanrec, nick);
@@ -234,6 +256,7 @@ void quassel_irssi_topic(void* arg, int network, char *chan, char *topic) {
 void quassel_msgs_init(void) {
 	signal_add_first("message own_public", (SIGNAL_FUNC) sig_own_msg);
 	signal_add_first("message own_private", (SIGNAL_FUNC) sig_own_msg);
+	theme_register(fecommon_irc_formats);
 }
 
 void quassel_msgs_deinit(void) {

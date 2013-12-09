@@ -2,6 +2,7 @@
 IRSSI_INCLUDE:=/usr/include/irssi/
 IRSSI_CFLAGS+=-I$(IRSSI_INCLUDE)/src/
 IRSSI_CFLAGS+=-I$(IRSSI_INCLUDE)/src/core/
+IRSSI_CFLAGS+=-I$(IRSSI_INCLUDE)/src/fe-common/
 IRSSI_CFLAGS+=-I$(IRSSI_INCLUDE)/src/fe-common/core/
 IRSSI_CFLAGS+=-I$(IRSSI_INCLUDE)/src/fe-text/
 IRSSI_CFLAGS+=$(shell pkg-config glib-2.0 --cflags)
