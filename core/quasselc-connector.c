@@ -19,10 +19,11 @@
 #include <asm/socket.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/wait.h>
 #include <netdb.h>
 #include <stdio.h>
-#include <ctype.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include <unistd.h>
 #include <string.h>
 #include <iconv.h>
