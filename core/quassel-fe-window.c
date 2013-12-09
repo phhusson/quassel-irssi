@@ -94,6 +94,8 @@ void quassel_irssi_set_last_seen_msg(void *arg, int buffer_id, int msgid) {
 	if(!chanrec)
 		return;
 	chanrec->last_seen_msg_id = msgid;
+	if(chanrec->init_last_seen_msg_id == -1)
+		chanrec->init_last_seen_msg_id = msgid;
 
 	//Now find windows
 	GSList *win = windows;

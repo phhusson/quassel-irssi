@@ -39,8 +39,8 @@ static void cmd_qbacklog(const char *arg, Quassel_SERVER_REC *server, WI_ITEM_RE
 	int first = -1;
 	int additional = 0;
 	int last = chanrec->first_msg_id;
-	if(chanrec->last_seen_msg_id != -1) {
-		first = chanrec->last_seen_msg_id;
+	if(chanrec->init_last_seen_msg_id != -1) {
+		first = chanrec->init_last_seen_msg_id;
 		if(n) {
 			additional = 0;
 		} else {

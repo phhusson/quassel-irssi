@@ -53,6 +53,7 @@ CHANNEL_REC *quassel_channel_create(SERVER_REC *server, const char *name,
 	rec->buffer_id = -1;
 	rec->last_msg_id = -1;
 	rec->last_seen_msg_id = -1;
+	rec->init_last_seen_msg_id = -1;
 	rec->first_msg_id = -1;
 	rec->got_backlog = 0;
 
