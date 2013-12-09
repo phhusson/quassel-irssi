@@ -277,3 +277,42 @@ void quassel_request_backlog(GIOChannel *h, int buffer, int first, int last, int
 	net_transmit(h, (char*)&v, 4);
 	net_transmit(h, msg, size);
 }
+
+void quassel_init_packet(GIOChannel* h, int ssl) {
+	int size=0;
+	int elements=0;
+	char msg[2048];
+
+	size+=add_bool_in_map(msg+size, "UseSsl", !!ssl);
+	elements++;
+
+	size+=add_bool_in_map(msg+size, "UseCompression", 0);
+	elements++;
+
+	size+=add_int_in_map(msg+size, "ProtocolVersion", 10);
+	elements++;
+
+	size+=add_string_in_map(msg+size, "MsgType", "ClientInit");
+	elements++;
+
+	size+=add_string_in_map(msg+size, "ClientVersion", "v0.6.1 (Quassel-IRSSI)");
+	elements++;
+
+	size+=add_string_in_map(msg+size, "ClientDate", "Oct 23 2011 18:00:00");
+	elements++;
+
+	//The message will be of that length
+	unsigned int v=htonl(size+5);
+	net_transmit(h, (char*)&v, 4);
+	//This is a QMap
+	v=htonl(8);
+	net_transmit(h, (char*)&v, 4);
+	
+	//QMap is valid
+	v=0;
+	net_transmit(h, (char*)&v, 1);
+	//The QMap has <elements> elements
+	v=htonl(elements);
+	net_transmit(h, (char*)&v, 4);
+	net_transmit(h, msg, size);
+}
