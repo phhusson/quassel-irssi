@@ -128,8 +128,15 @@ void quassel_irssi_handle(void* arg, int msg_id, int bufferid, int network, char
 					r, recoded, nick, "coin", chan);
 		}
 		g_free(recoded);
+	} else if(type == 0x02) {
+		printformat(SERVER(r), chan, MSGLEVEL_NOTICES,
+				IRCTXT_NOTICE_PUBLIC, nick, chan, content);
+		signal_emit("message notice", 5,
+				r, content, nick, "", chan);
 	} else if(type == 0x04) {
 		print_ctcpaction(r, content, nick, address, chan);
+		signal_emit("message action", 5,
+				r, content, nick, "", chan);
 	} else if(type == 0x08) {
 		//Nick
 		NICK_REC* nick_rec = nicklist_find((CHANNEL_REC*)chanrec, nick);
@@ -165,6 +172,17 @@ void quassel_irssi_handle(void* arg, int msg_id, int bufferid, int network, char
 			nicklist_remove(CHANNEL(channel), nickrec);
 		}
 		g_slist_free(nicks);
+	} else if(type == 0x100) {
+		//Kick
+		char *kicked = content;
+		char *msg = index(content, ' ');
+		if(!msg) {
+			msg = "";
+		} else {
+			msg[0] = 0;
+			msg++;
+		}
+		signal_emit("message kick", 6, SERVER(r), chan, kicked, nick, address, msg);
 	} else /*if(type == 0x400) */{
 		char *str = NULL;
 		int len = asprintf(&str, "%d:%s:%s", type, sender, content);
