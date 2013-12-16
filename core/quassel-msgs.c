@@ -132,10 +132,17 @@ void quassel_irssi_handle(void* arg, int msg_id, int bufferid, int network, char
 		}
 		g_free(recoded);
 	} else if(type == 0x02) {
-		printformat(SERVER(r), chan, MSGLEVEL_NOTICES,
-				IRCTXT_NOTICE_PUBLIC, nick, chan, content);
-		signal_emit("message notice", 5,
-				r, content, nick, "", chan);
+		if(strcmp(nick, buffer_id) == 0 || strcmp(buffer_id, "")==0 ) {
+			printformat(SERVER(r), nick, MSGLEVEL_NOTICES,
+					IRCTXT_NOTICE_PRIVATE, nick, address, content);
+			signal_emit("message priv_notice", 5,
+					r, content, nick, "", nick);
+		} else {
+			printformat(SERVER(r), chan, MSGLEVEL_NOTICES,
+					IRCTXT_NOTICE_PUBLIC, nick, chan, content);
+			signal_emit("message notice", 5,
+					r, content, nick, "", chan);
+		}
 	} else if(type == 0x04) {
 		print_ctcpaction(r, content, nick, address, chan);
 		signal_emit("message action", 5,
@@ -211,11 +218,12 @@ void quassel_irssi_handle(void* arg, int msg_id, int bufferid, int network, char
 			type == 0x8000 ? "NetsplitJoin" :
 			type == 0x10000 ? "NetsplitQuit" :
 			type == 0x20000 ? "Invite" : "Unknown type";
-		int len = asprintf(&str, "%s:%s:%s", type_str, sender, content);
+		int len = asprintf(&str, "%s:%s", type_str, content);
 		(void)len;
 		chanrec->buffer_id = bufferid;
-		signal_emit("message public", 5,
-				r, str, "server", "coin", chan);
+		//Show it as a notice...
+		printformat(SERVER(r), chan, MSGLEVEL_NOTICES,
+				IRCTXT_NOTICE_PUBLIC, sender, chan, str);
 		free(str);
 	}
 
