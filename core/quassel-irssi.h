@@ -50,7 +50,7 @@ extern void quassel_irssi_check_read(Quassel_CHANNEL_REC* chanrec);
 void quassel_fewindow_init(void);
 void quassel_fewindow_deinit(void);
 
-static inline char *channame(int net, char *buf) {
+static inline char *channame(int net, const char *buf) {
 	char *ret = NULL;
 	int len = asprintf(&ret, "%d-%s", net, buf);
 	(void)len;

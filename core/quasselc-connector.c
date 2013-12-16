@@ -33,7 +33,7 @@
 #if 0
 #define dprintf(x...) printf(x)
 #else
-static void useless_printf(char *str, ...) {
+static void useless_printf(const char *str, ...) {
 	(void)str;
 }
 #define dprintf(x...) useless_printf(x)
