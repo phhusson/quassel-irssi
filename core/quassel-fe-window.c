@@ -27,6 +27,7 @@
 static void quassel_chan_read(Quassel_CHANNEL_REC* chanrec) {
 	GIOChannel *giochan = net_sendbuffer_handle(chanrec->server->handle);
 	quassel_set_last_seen_msg(giochan, chanrec->buffer_id, chanrec->last_msg_id);
+	quassel_set_marker(giochan, chanrec->buffer_id, chanrec->last_msg_id);
 	quassel_mark_as_read(giochan, chanrec->buffer_id);
 }
 

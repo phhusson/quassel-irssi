@@ -88,9 +88,11 @@ void quassel_irssi_handle(void* arg, int msg_id, int bufferid, int network, char
 	char *chan = channame(network, buffer_id);
 	char *nick = strdup(sender);
 	char *address;
-	if( (address=index(nick, '!')) != NULL)
+	if( (address=index(nick, '!')) != NULL) {
 		*address = 0;
-	address++;
+		address++;
+	} else
+		address=strdup("");
 	//Text message
 	/*
 	   Plain(0x00001),
