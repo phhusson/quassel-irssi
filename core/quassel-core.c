@@ -103,6 +103,7 @@ void quassel_core_init(void) {
 	quassel_fewindow_init();
 	quassel_msgs_init();
 	quassel_cmds_init();
+	quassel_felevel_init();
 
 	module_register("quassel", "core");
 }
@@ -110,6 +111,8 @@ void quassel_core_init(void) {
 void quassel_core_deinit(void) {
 	signal_emit("chat protocol deinit", 1, chat_protocol_find("Quassel"));
 	chat_protocol_unregister("Quassel");
+
+	quassel_felevel_deinit();
 	quassel_fewindow_deinit();
 	quassel_msgs_deinit();
 	quassel_cmds_deinit();

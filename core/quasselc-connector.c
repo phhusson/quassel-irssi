@@ -58,6 +58,8 @@ static void new_buffer(int bufid, int netid, short type, int group, char *name) 
 			buffers[i].i.id=-1;
 		n_buffers=bufid+1;
 	}
+	if(buffers[bufid].i.id == (uint32_t)bufid)
+		return;
 	buffers[bufid].i.network=netid;
 	buffers[bufid].i.id=bufid;
 	buffers[bufid].i.type=type;
@@ -66,6 +68,13 @@ static void new_buffer(int bufid, int netid, short type, int group, char *name) 
 	buffers[bufid].marker=0;
 	buffers[bufid].lastseen=0;
 	buffers[bufid].displayed=1;
+}
+
+int quassel_buffer_displayed(uint32_t bufid);
+int quassel_buffer_displayed(uint32_t bufid) {
+	if(buffers[bufid].i.id == bufid)
+		return buffers[bufid].displayed;
+	return 1;
 }
 
 static void may_new_buffer(int bufid, int netid, short type, int group, char* name) {
@@ -125,7 +134,7 @@ void handle_sync(void* irssi_arg, object_t o, function_t f, ...) {
 				fnc="BufferDisplayed";
 			bufid=va_arg(ap, int);
 			dprintf("%s(%d)\n", fnc, bufid);
-			buffers[bufid].displayed=1;
+			//buffers[bufid].displayed=1;
 			break;
 		case Removed:
 			if(!fnc)
@@ -134,7 +143,12 @@ void handle_sync(void* irssi_arg, object_t o, function_t f, ...) {
 			if(!fnc)
 				fnc="BufferTempRemoved";
 			bufid=va_arg(ap, int);
+			if(bufid>=n_buffers)
+				break;
 			buffers[bufid].displayed=0;
+			if(buffers[bufid].i.id == (uint32_t)-1)
+				break;
+			quassel_irssi_hide(irssi_arg, buffers[bufid].i.network, buffers[bufid].i.name);
 			dprintf("%s(%d)\n", fnc, bufid);
 			break;
 		case SetLastSeenMsg:

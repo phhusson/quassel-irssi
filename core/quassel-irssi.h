@@ -69,6 +69,10 @@ CHANNEL_REC *quassel_channel_create(SERVER_REC *server, const char *name, const 
 extern void quassel_cmds_init(void);
 extern void quassel_cmds_deinit(void);
 
+//quassel-fe-level.c
+void quassel_felevel_init(void);
+void quassel_felevel_deinit(void);
+
 //Used by irssi itself
 extern void quassel_core_init(void);
 extern void quassel_core_deinit(void);
