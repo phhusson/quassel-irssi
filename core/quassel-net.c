@@ -101,7 +101,7 @@ static SERVER_REC* quassel_server_init_connect(SERVER_CONNECT_REC* conn) {
 		char *p = index(chan, '-');
 		if(!p)
 			return 0;
-		return *(p+1) == '#';
+		return *(p+1) == '#' || *(p+1) == '&';
 	}
 	ret->ischannel = ischannel;
 
