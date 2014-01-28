@@ -16,7 +16,7 @@ How to build
     git submodule update
     cd core
     make
-    cp libquassel_core.so ~/.irssi.modules
+    cp libquassel_core.so ~/.irssi/modules/
 
 How to use
 ----------
