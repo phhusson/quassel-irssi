@@ -58,3 +58,32 @@ To automtically connect to it, you can add:
 in your ~/.irssi/startup
 
 If someone knows how to do all this 100% from irssi text frontend, i'd appreciate it :-)
+
+Associated scripts
+------------------
+
+- trackbar.pl:
+ quassel-irssi implements trackar.pl behaviours, but linked with the core:
+ the trackbar is synchronized among quassel clients.
+
+- adv_windowlist.pl
+ hidden buffers have -1 activity level.
+ adv_windowlist.pl compares activity level to awl_hide_data, which by default is set to 0.
+ Meaning, adv_windowlist.pl, in its default setting, will only show unhidden buffers.
+
+
+Phh's config
+------------
+
+I'm using the following scripts:
+- adv_windowlist.pl
+ List "open" buffers
+- go.pl
+ I have many opened buffers, so i do /go chan when i don't have a shortcut to a buffer.
+ Because the channel names in irssi start with X-# where X is the number of network,
+ i deleted the ^ line 104, to be able to just do /go quassel-irssi
+
+- nickcolor.pl
+- usercount.pl
+
+If you're using screen, you may want to add nicklist.pl.

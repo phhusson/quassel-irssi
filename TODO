@@ -1,6 +1,8 @@
 Bugs:
 -qbacklog command needs to switch window forth and back to render
 -Queries are partially handled as channels. (makes nickcolor pick a random color in a query)
+-Without SSL(even with?), there might be a network deadlock when sending too many requests in a row.
+-Queries' buffers are opened only on first message, not on login
 
 Features:
 -Properly render backlog
