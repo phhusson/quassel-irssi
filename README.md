@@ -30,8 +30,10 @@ Edit ~/.irssi/config and add a quassel chatnet with Quassel type, and your quass
     };
 
     servers = (
-      { address = "quassel.phh.me"; port = "4242"; chatnet = "quassel_phh"; password="password";}
+      { address = "quassel.phh.me"; port = "4242"; chatnet = "quassel_phh"; password="password"; use_ssl="yes"; }
     );
+
+You may disable ssl if you really need to.
 
 You also need to have your login equal to your nick:
 
