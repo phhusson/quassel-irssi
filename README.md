@@ -10,6 +10,10 @@ Huge thanks to QuasselDroid. QuasselDroid protocol code is way easier to read th
 How to build
 ------------
 
+First install irssi-dev (on debian-based distributions) or irssi-devel (on rpm distributions),
+everything needed to compile C code, based on glib2 and git.
+Then:
+
     git clone https://github.com/phhusson/quassel-irssi.git
     cd quassel-irssi
     git submodule init
