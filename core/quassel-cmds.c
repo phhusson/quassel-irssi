@@ -59,6 +59,9 @@ static void cmd_qbacklog(const char *arg, Quassel_SERVER_REC *server, WI_ITEM_RE
 }
 
 static void cmd_self(const char *arg, Quassel_SERVER_REC* server, WI_ITEM_REC* wi) {
+	if(SERVER(server)->chat_type != Quassel_PROTOCOL)
+		return;
+
 	char *cmd = NULL;
 	int len = asprintf(&cmd, "/%s %s", current_command, arg);
 	(void)len;
