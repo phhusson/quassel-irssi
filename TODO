@@ -3,6 +3,7 @@ Bugs:
 -Queries are partially handled as channels. (makes nickcolor pick a random color in a query)
 -Without SSL(even with?), there might be a network deadlock when sending too many requests in a row.
 -Queries' buffers are opened only on first message, not on login
+-You can't create new query buffer, you can use only already existing ones
 
 Features:
 -Properly render backlog
