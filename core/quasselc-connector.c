@@ -87,7 +87,7 @@ int quassel_find_buffer_id(const char *name, uint32_t network) {
 	for(i=0;i<n_buffers;++i) {
 		if(buffers[i].i.id==(uint32_t)-1)
 			continue;
-		if(strcmp(buffers[i].i.name, name)==0 && (network == (uint32_t)-1 || buffers[i].i.network == network))
+		if(strcasecmp(buffers[i].i.name, name)==0 && (network == (uint32_t)-1 || buffers[i].i.network == network))
 			return i;
 	}
 	return -1;
