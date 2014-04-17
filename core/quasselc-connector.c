@@ -94,6 +94,10 @@ int quassel_find_buffer_id(const char *name, uint32_t network) {
 }
 
 void quassel_send_message(GIOChannel* h, int buffer, const char *message) {
+	if(buffer==-1) {
+		fprintf(stderr, "Sending a message to unknown buffer... Case not handled\n");
+		exit(1);
+	}
 	send_message(h, buffers[buffer].i, message);
 }
 
