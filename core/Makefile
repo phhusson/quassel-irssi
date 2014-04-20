@@ -1,5 +1,8 @@
+INSTALL = install
+
 #IRSSI_INCLUDE:=/home/phh/irssi-0.8.16-rc1.phh/
 IRSSI_INCLUDE:=/usr/include/irssi/
+IRSSI_LIB:=/usr/lib/irssi
 IRSSI_CFLAGS+=-I$(IRSSI_INCLUDE)/src/
 IRSSI_CFLAGS+=-I$(IRSSI_INCLUDE)/src/core/
 IRSSI_CFLAGS+=-I$(IRSSI_INCLUDE)/src/fe-common/
@@ -24,6 +27,10 @@ quasselc-connector.o: CFLAGS:=$(CFLAGS) -Ilib
 
 libquassel_core.so: $(OBJECTS) $(LIBQUASSEL)
 	gcc -shared $^ -o $@
+
+install:
+	$(INSTALL) -d $(IRSSI_LIB)/modules
+	$(INSTALL) -m0644 libquassel_core.so $(IRSSI_LIB)/modules
 
 clean:
 	rm -f irssi/*.o lib/*.o *.o libquassel_core.so
