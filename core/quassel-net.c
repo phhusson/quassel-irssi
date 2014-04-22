@@ -48,7 +48,7 @@ static void quassel_parse_incoming(Quassel_SERVER_REC* r) {
 	server_ref((SERVER_REC*)r);
 	if(!r->size) {
 		uint32_t size;
-		net_receive(chan, (char*)&size, 4);
+		read_io(chan, (char*)&size, 4);
 		size = ntohl(size);
 		if(size<=0)
 			return;
@@ -59,7 +59,7 @@ static void quassel_parse_incoming(Quassel_SERVER_REC* r) {
 		r->got = 0;
 	}
 
-	r->got += net_receive(chan, r->msg+r->got, r->size - r->got);
+	r->got += read_io(chan, r->msg+r->got, r->size - r->got);
 	if(r->got == r->size) {
 		quassel_parse_message(chan, r->msg, r);
 		free(r->msg);
@@ -81,10 +81,18 @@ static void sig_connected(Quassel_SERVER_REC* r) {
 	g_io_channel_set_encoding(r->handle->handle, NULL, NULL);
 	g_io_channel_set_buffered(r->handle->handle, FALSE);
 
+#if 0
+	if(!quassel_negotiate(net_sendbuffer_handle(r->handle), r->ssl)) {
+		fprintf(stderr, "Old quasselcore\n");
+		exit(1);
+	}
+#endif
+
 	r->readtag =
 		g_input_add(net_sendbuffer_handle(r->handle),
 			    G_INPUT_READ,
 			    (GInputFunction) quassel_parse_incoming, r);
+
 	quassel_init_packet(net_sendbuffer_handle(r->handle), r->ssl);
 }
 

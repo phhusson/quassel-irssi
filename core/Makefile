@@ -22,14 +22,15 @@ TARGET=libquassel_core.so
 
 all: libquassel_core.so
 
-LIBQUASSEL:=lib/cmds.o lib/display.o
+LIBQUASSEL:=lib/cmds.o lib/display.o lib/io.o
 LIBQUASSEL+=lib/getters.o lib/main.o lib/setters.o
+LIBQUASSEL+=lib/negotiation.o
 
 irssi/network-openssl.o: CFLAGS:=$(IRSSI_CFLAGS)
 quasselc-connector.o: CFLAGS:=$(CFLAGS) -Ilib
 
 $(TARGET): $(OBJECTS) $(LIBQUASSEL)
-	gcc -shared $^ -o $@
+	gcc -shared $^ -o $@ -lz
 
 install: $(TARGET)
 	$(INSTALL) -d $(IRSSI_LIB)/modules
