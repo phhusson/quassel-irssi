@@ -42,7 +42,7 @@
 
 #include "quassel-irssi.h"
 
-static void quassel_irssi_join2(void* arg, char* _chan, char* nick,
+static void quassel_irssi_join2(void* arg, char* _chan, char* nick, char* host,
 		char* mode) {
 	Quassel_CHANNEL_REC* chan_rec = (Quassel_CHANNEL_REC*) channel_find(SERVER(arg), _chan);
 	if(!chan_rec)
@@ -50,6 +50,7 @@ static void quassel_irssi_join2(void* arg, char* _chan, char* nick,
 
 	NICK_REC* rec = g_new0(NICK_REC, 1);
 	rec->nick = g_strdup(nick);
+	rec->host = g_strdup(host);
 	for(int i=0; mode[i]; ++i) {
 		if(mode[i] == 'o')
 			rec->op = 1;
@@ -68,7 +69,7 @@ void quassel_irssi_join(void* arg, int network,
 		char *chan, char* nick,
 		char* mode) {
 	char *_chan = channame(network, chan);
-	quassel_irssi_join2(arg, _chan, nick, mode);
+	quassel_irssi_join2(arg, _chan, nick, NULL, mode);
 	free(_chan);
 }
 
@@ -175,7 +176,7 @@ void quassel_irssi_handle(void* arg, int msg_id, int bufferid, int network, char
 		signal_emit("message nick", 4, SERVER(r), content, nick, address);
 	} else if(type == 0x20) {
 		//Join
-		quassel_irssi_join2(r, chan, nick, "");
+		quassel_irssi_join2(r, chan, nick, address, "");
 
 		NICK_REC* nick_rec = nicklist_find((CHANNEL_REC*)chanrec, nick);
 		signal_emit("nicklist new", 2, chanrec, nick_rec);
