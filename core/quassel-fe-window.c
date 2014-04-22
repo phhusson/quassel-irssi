@@ -140,6 +140,7 @@ void quassel_irssi_set_last_seen_msg(void *arg, int buffer_id, int msgid) {
 					str[i+2]='-';
 				str[winrec->width+2]=0;
 				printtext_string_window(winrec, MSGLEVEL_NEVER, str);
+				free(str);
 				textbuffer_view_set_bookmark_bottom(WINDOW_GUI(winrec)->view, "trackbar");
 			}
 		}
