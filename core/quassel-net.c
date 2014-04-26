@@ -43,12 +43,15 @@ static void quassel_server_connect(SERVER_REC *server) {
 }
 
 static void quassel_parse_incoming(Quassel_SERVER_REC* r) {
+	int ret;
 	GIOChannel *chan = net_sendbuffer_handle(r->handle);
 
 	server_ref((SERVER_REC*)r);
 	if(!r->size) {
 		uint32_t size;
-		read_io(chan, (char*)&size, 4);
+		ret = read_io(chan, (char*)&size, 4);
+		if (ret != 4)
+			return;
 		size = ntohl(size);
 		if(size<=0)
 			return;
@@ -59,7 +62,10 @@ static void quassel_parse_incoming(Quassel_SERVER_REC* r) {
 		r->got = 0;
 	}
 
-	r->got += read_io(chan, r->msg+r->got, r->size - r->got);
+	ret = read_io(chan, r->msg+r->got, r->size - r->got);
+	if (ret < 0)
+		return;
+	r->got += ret;
 	if(r->got == r->size) {
 		quassel_parse_message(chan, r->msg, r);
 		free(r->msg);
