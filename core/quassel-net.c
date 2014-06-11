@@ -150,6 +150,11 @@ void quassel_net_init(CHAT_PROTOCOL_REC* rec) {
 GIOChannel *irssi_ssl_get_iochannel(GIOChannel *handle, int port, SERVER_REC *server);
 void quassel_irssi_init_ack(void *arg) {
 	Quassel_SERVER_REC *server = (Quassel_SERVER_REC*)arg;
+	//TODO: Errors in IRSSI ?
+	if(!server->connrec->password) {
+		fprintf(stderr, "You must specify a password\n");
+		exit(1);
+	}
 	if(!server->ssl)
 		goto login;
 	GIOChannel* ssl_handle = irssi_ssl_get_iochannel(server->handle->handle, 1337, SERVER(server));
