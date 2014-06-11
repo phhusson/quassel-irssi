@@ -134,7 +134,7 @@ void quassel_irssi_handle(void* arg, int msg_id, int bufferid, int network, char
 	*/
 	Quassel_CHANNEL_REC* chanrec = (Quassel_CHANNEL_REC*) channel_find(SERVER(r), chan);
 	if(!chanrec)
-		chanrec = (Quassel_CHANNEL_REC*) quassel_channel_create(SERVER(r), chan, chan, 0);
+		chanrec = (Quassel_CHANNEL_REC*) quassel_channel_create(SERVER(r), chan, chan, 1);
 	if(chanrec->first_msg_id == -1)
 		chanrec->first_msg_id = msg_id;
 	chanrec->last_msg_id = msg_id;
@@ -291,7 +291,7 @@ static void channel_change_topic(SERVER_REC *server, const char *channel,
 	
 	chanrec = channel_find(SERVER(server), channel);
 	if (chanrec == NULL) {
-		chanrec = quassel_channel_create(server, channel, channel, 0);
+		chanrec = quassel_channel_create(server, channel, channel, 1);
 	}
 	/* the topic may be send out encoded, so we need to 
 	   recode it back or /topic <tab> will not work properly */
