@@ -1,3 +1,0 @@
-[submodule "core/lib"]
-	path = core/lib
-	url = https://github.com/phhusson/QuasselC.git
