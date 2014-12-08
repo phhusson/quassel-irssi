@@ -244,6 +244,11 @@ void handle_sync(void* irssi_arg, object_t o, function_t f, ...) {
 			int latency=va_arg(ap, int);
 			dprintf("SetLatency(%s, %d)\n", net, latency);
 			break;
+		case MyNick:
+			net = va_arg(ap, char*);
+			nick = va_arg(ap, char*);
+			dprintf("MyNick(%s, %d)\n", net, nick);
+			break;
 	}
 	va_end(ap);
 }
@@ -289,6 +294,11 @@ void handle_event(void* arg, GIOChannel *h, event_t t, ...) {
 			net = va_arg(ap, int);
 			chan = va_arg(ap, char*);
 			quassel_irssi_joined(arg, net, chan);
+			break;
+		case ClientLoginReject:
+			//TODO
+			fprintf(stderr, "Wrong user or wrong password\n");
+			exit(1);
 			break;
 	}
 	va_end(ap);
