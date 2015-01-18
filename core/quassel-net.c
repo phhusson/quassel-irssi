@@ -36,6 +36,7 @@
 #include <printtext.h>
 #include <levels.h>
 #include "quassel-irssi.h"
+#include "connector.h"
 
 static void quassel_server_connect(SERVER_REC *server) {
 	if (!server_start_connect(server) && server) {
@@ -89,6 +90,7 @@ static void sig_connected(Quassel_SERVER_REC* r) {
 	g_io_channel_set_encoding(r->handle->handle, NULL, NULL);
 	g_io_channel_set_buffered(r->handle->handle, FALSE);
 
+//Set to 0 if you really need to enable old quassel protocol
 #if 1
 #define S(x) #x
 #define S_(x) S(x)
@@ -174,4 +176,9 @@ void quassel_irssi_init_ack(void *arg) {
 
 login:
 	quassel_login(server->handle->handle, server->connrec->nick, server->connrec->password);
+}
+
+void quassel_irssi_init_nack(void *arg) {
+	Quassel_SERVER_REC *server = (Quassel_SERVER_REC*)arg;
+	signal_emit("server connect failed", 2, server, "Wrong user or password");
 }

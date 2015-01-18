@@ -29,6 +29,7 @@
 #include <iconv.h>
 #include "quasselc.h"
 #include "export.h"
+#include "connector.h"
 
 #if 0
 #define dprintf(x...) printf(x)
@@ -296,9 +297,7 @@ void handle_event(void* arg, GIOChannel *h, event_t t, ...) {
 			quassel_irssi_joined(arg, net, chan);
 			break;
 		case ClientLoginReject:
-			//TODO
-			fprintf(stderr, "Wrong user or wrong password\n");
-			exit(1);
+			quassel_irssi_init_nack(arg);
 			break;
 	}
 	va_end(ap);
