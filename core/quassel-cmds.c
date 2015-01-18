@@ -35,6 +35,8 @@
 
 //fe-common/core
 #include <fe-windows.h>
+#include <printtext.h>
+#include <levels.h>
 
 #include "quassel-irssi.h"
 
@@ -49,6 +51,12 @@ static void cmd_quote(const char *arg, Quassel_SERVER_REC* server, WI_ITEM_REC* 
 static void cmd_qbacklog(const char *arg, Quassel_SERVER_REC *server, WI_ITEM_REC* wi) {
 	(void)arg;
 	int n = atoi(arg);
+	if(wi == NULL) {
+		//Means we're on buffer 1
+		//We should retrieve everything... ?
+                printtext(NULL, NULL, MSGLEVEL_CLIENTERROR, "You must be on a buffer to get backlog");
+		return;
+	}
 	Quassel_CHANNEL_REC* chanrec = (Quassel_CHANNEL_REC*) channel_find(SERVER(server), wi->visible_name);
 	if(!chanrec)
 		return;
