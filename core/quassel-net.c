@@ -33,10 +33,12 @@
 #include <settings.h>
 #include <signals.h>
 
+#include <printtext.h>
+#include <levels.h>
 #include "quassel-irssi.h"
 
 static void quassel_server_connect(SERVER_REC *server) {
-	if (!server_start_connect(server)) {
+	if (!server_start_connect(server) && server) {
 		server_connect_unref(server->connrec);
 		g_free(server);
 	}
@@ -87,10 +89,13 @@ static void sig_connected(Quassel_SERVER_REC* r) {
 	g_io_channel_set_encoding(r->handle->handle, NULL, NULL);
 	g_io_channel_set_buffered(r->handle->handle, FALSE);
 
-#if 0
+#if 1
+#define S(x) #x
+#define S_(x) S(x)
+#define S__LINE__ S_(__LINE__)
 	if(!quassel_negotiate(net_sendbuffer_handle(r->handle), r->ssl)) {
-		fprintf(stderr, "Old quasselcore\n");
-		exit(1);
+		signal_emit("server connect failed", 2, r, "Old Quassel protocol, see around " __FILE__ ":" S__LINE__);
+		return;
 	}
 #endif
 
@@ -110,6 +115,10 @@ static const char *get_nick_flags(SERVER_REC *server) {
 static SERVER_REC* quassel_server_init_connect(SERVER_CONNECT_REC* conn) {
 	Quassel_SERVER_CONNECT_REC *r = (Quassel_SERVER_CONNECT_REC*) conn;
 
+	if(!conn->password) {
+                printtext(NULL, NULL, MSGLEVEL_CLIENTERROR, "Quassel: You MUST specify a password ");
+		return NULL;
+	}
 	Quassel_SERVER_REC *ret = (Quassel_SERVER_REC*) g_new0(Quassel_SERVER_REC, 1);
 	ret->chat_type = Quassel_PROTOCOL;
 	ret->connrec = r;
@@ -150,11 +159,6 @@ void quassel_net_init(CHAT_PROTOCOL_REC* rec) {
 GIOChannel *irssi_ssl_get_iochannel(GIOChannel *handle, int port, SERVER_REC *server);
 void quassel_irssi_init_ack(void *arg) {
 	Quassel_SERVER_REC *server = (Quassel_SERVER_REC*)arg;
-	//TODO: Errors in IRSSI ?
-	if(!server->connrec->password) {
-		fprintf(stderr, "You must specify a password\n");
-		exit(1);
-	}
 	if(!server->ssl)
 		goto login;
 	GIOChannel* ssl_handle = irssi_ssl_get_iochannel(server->handle->handle, 1337, SERVER(server));
@@ -162,8 +166,8 @@ void quassel_irssi_init_ack(void *arg) {
 	//That's polling, and that's really bad...
 	while( (error=irssi_ssl_handshake(ssl_handle)) & 1) {
 		if(error==-1) {
-			fprintf(stderr, "SSL handshake failed\n");
-			exit(1);
+			signal_emit("server connect failed", 2, server, "SSL Handshake failed");
+			return;
 		}
 	}
 	server->handle->handle = ssl_handle;
