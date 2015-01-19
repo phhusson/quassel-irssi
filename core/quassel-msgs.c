@@ -88,7 +88,7 @@ static void print_ctcpaction(Quassel_SERVER_REC *server, const char* content, co
 	/* channel action */
 	(void) content;
 	(void) address;
-	if(strcmp(active_win->active->visible_name, target) == 0) {
+	if(active_win && active_win->active && strcmp(active_win->active->visible_name, target) == 0) {
 		/* message to active channel in window */
 		printformat(server, target, MSGLEVEL_ACTIONS|MSGLEVEL_PUBLIC,
 				IRCTXT_ACTION_PUBLIC, nick, content);
