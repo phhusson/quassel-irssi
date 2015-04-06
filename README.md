@@ -91,3 +91,15 @@ I'm using the following scripts:
 - usercount.pl
 
 If you're using screen, you may want to add nicklist.pl.
+
+
+Dependencies
+------------
+
+You'll need basic build systems, openssl, irssi, and glib libraries and includes to build this.
+
+For instance on a debian/ubuntu:
+
+    apt-get install build-essential libglib2.0-dev irssi-dev libssl-dev
+
+
