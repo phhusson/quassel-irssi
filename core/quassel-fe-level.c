@@ -39,6 +39,7 @@
 #include <fe-windows.h>
 #include <printtext.h>
 
+#include "connector.h"
 #include "quassel-irssi.h"
 #include "irssi/irssi-gui.h"
 

@@ -40,6 +40,7 @@
 //fe-common/
 #include <irc/module-formats.h>
 
+#include "connector.h"
 #include "quassel-irssi.h"
 
 static void quassel_irssi_join2(void* arg, char* _chan, char* nick, char* host,
