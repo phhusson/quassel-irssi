@@ -39,7 +39,7 @@
 #include "quassel-irssi.h"
 
 static CHATNET_REC *create_chatnet(void) {
-    return g_new0(CHATNET_REC, 1);
+    return (CHATNET_REC*)g_new0(Quassel_CHATNET_REC, 1);
 }
 
 static SERVER_SETUP_REC *create_server_setup(void) {
@@ -116,6 +116,10 @@ void quassel_core_init(void) {
 	quassel_net_init(rec);
 	chat_protocol_register(rec);
 	g_free(rec);
+
+	//I'm being loaded AFTER configuration is read
+	//So I need to ask for a configuration reread
+	settings_reread(NULL);
 
 	quassel_fewindow_init();
 	quassel_msgs_init();

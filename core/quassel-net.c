@@ -32,6 +32,8 @@
 #include <servers.h>
 #include <settings.h>
 #include <signals.h>
+#include <unistd.h>
+#include <lib-config/iconfig.h>
 
 #include <printtext.h>
 #include <levels.h>
@@ -90,16 +92,15 @@ static void sig_connected(Quassel_SERVER_REC* r) {
 	g_io_channel_set_encoding(r->handle->handle, NULL, NULL);
 	g_io_channel_set_buffered(r->handle->handle, FALSE);
 
-//Set to 0 if you really need to enable old quassel protocol
-#if 1
-#define S(x) #x
-#define S_(x) S(x)
-#define S__LINE__ S_(__LINE__)
-	if(!quassel_negotiate(net_sendbuffer_handle(r->handle), r->ssl)) {
-		signal_emit("server connect failed", 2, r, "Old Quassel protocol, see around " __FILE__ ":" S__LINE__);
-		return;
+	Quassel_CHATNET_REC *chatnet = (Quassel_CHATNET_REC*)chatnet_find(r->connrec->chatnet);
+	int legacy = chatnet->legacy;
+
+	if(!legacy) {
+		if(!quassel_negotiate(net_sendbuffer_handle(r->handle), r->ssl)) {
+			signal_emit("server connect failed", 2, r, "Old Quassel protocol detected. Specify legacy = true in chatnet section");
+			return;
+		}
 	}
-#endif
 
 	r->readtag =
 		g_input_add(net_sendbuffer_handle(r->handle),
@@ -152,10 +153,19 @@ static SERVER_REC* quassel_server_init_connect(SERVER_CONNECT_REC* conn) {
 	return (SERVER_REC*)ret;
 }
 
+static void sig_chatnet_read(Quassel_CHATNET_REC* rec, CONFIG_NODE* node) {
+	if(!PROTO_CHECK_CAST(CHATNET(rec), Quassel_CHATNET_REC, chat_type, "Quassel"))
+		return;
+
+	int legacy = config_node_get_bool(node, "legacy", FALSE);
+	rec->legacy = legacy;
+}
+
 void quassel_net_init(CHAT_PROTOCOL_REC* rec) {
 	rec->server_init_connect = quassel_server_init_connect;
 	rec->server_connect = quassel_server_connect;
 	signal_add_first("server connected", (SIGNAL_FUNC) sig_connected);
+	signal_add("chatnet read", (SIGNAL_FUNC) sig_chatnet_read);
 }
 
 GIOChannel *irssi_ssl_get_iochannel(GIOChannel *handle, int port, SERVER_REC *server);
