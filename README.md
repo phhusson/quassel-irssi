@@ -76,6 +76,17 @@ Associated scripts
  Meaning, adv_windowlist.pl, in its default setting, will only show unhidden buffers.
 
 
+Available settings
+------------------
+
+In appropriate chatnet section (in this example, quassel_phh section), you can add some settings:
+- legacy is a boolean to define wether to use the legacy (< 0.10) protocol, or the newer one, which includes compression.
+- load_backlog is an integer between 0, 1, 2 to load backlog on connect.
+ 0 means no loading, 1 means loading backlog on unhidden buffers, 2 means loading backlog on all buffers
+- backlog_additional is a positive integer to specify how much backlog you want to get.
+ By default, quassel-irssi gets max 150 unread messages per buffer. Setting backlog_additional to X requests X additional messages to the unread messages.
+
+
 Phh's config
 ------------
 
