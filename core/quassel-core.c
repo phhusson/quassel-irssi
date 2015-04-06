@@ -117,14 +117,12 @@ void quassel_core_init(void) {
 	chat_protocol_register(rec);
 	g_free(rec);
 
-	//I'm being loaded AFTER configuration is read
-	//So I need to ask for a configuration reread
-	settings_reread(NULL);
-
 	quassel_fewindow_init();
 	quassel_msgs_init();
 	quassel_cmds_init();
 	quassel_felevel_init();
+
+	quassel_cfg_init();
 
 	module_register("quassel", "core");
 }

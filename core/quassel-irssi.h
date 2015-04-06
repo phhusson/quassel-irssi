@@ -78,6 +78,10 @@ extern void quassel_cmds_deinit(void);
 void quassel_felevel_init(void);
 void quassel_felevel_deinit(void);
 
+//quassel-cfg.c
+void quassel_cfg_init(void);
+void quassel_cfg_deinit(void);
+
 //Used by irssi itself
 extern void quassel_core_init(void);
 extern void quassel_core_deinit(void);

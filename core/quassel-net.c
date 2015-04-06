@@ -153,19 +153,10 @@ static SERVER_REC* quassel_server_init_connect(SERVER_CONNECT_REC* conn) {
 	return (SERVER_REC*)ret;
 }
 
-static void sig_chatnet_read(Quassel_CHATNET_REC* rec, CONFIG_NODE* node) {
-	if(!PROTO_CHECK_CAST(CHATNET(rec), Quassel_CHATNET_REC, chat_type, "Quassel"))
-		return;
-
-	int legacy = config_node_get_bool(node, "legacy", FALSE);
-	rec->legacy = legacy;
-}
-
 void quassel_net_init(CHAT_PROTOCOL_REC* rec) {
 	rec->server_init_connect = quassel_server_init_connect;
 	rec->server_connect = quassel_server_connect;
 	signal_add_first("server connected", (SIGNAL_FUNC) sig_connected);
-	signal_add("chatnet read", (SIGNAL_FUNC) sig_chatnet_read);
 }
 
 GIOChannel *irssi_ssl_get_iochannel(GIOChannel *handle, int port, SERVER_REC *server);
