@@ -40,6 +40,8 @@ typedef struct Quassel_QUERY_REC_s {
 typedef struct Quassel_CHATNET_REC_s {
 #include <chatnet-rec.h>
 	int legacy;
+	int load_backlog;
+	int backlog_additional;
 } Quassel_CHATNET_REC;
 
 #define Quassel_PROTOCOL (chat_protocol_lookup("Quassel"))

@@ -14,4 +14,5 @@ extern void quassel_irssi_hide(void* arg, int net, const char* chan);
 extern void quassel_irssi_ready(void *arg);
 extern void quassel_irssi_init_ack(void* arg);
 extern void quassel_irssi_init_nack(void* arg);
+extern void quassel_irssi_request_backlogs(void* h, int all, int additional);
 #endif /* _CONNECTOR_H */

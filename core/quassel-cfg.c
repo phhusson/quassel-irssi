@@ -46,6 +46,31 @@ static void sig_chatnet_read(Quassel_CHATNET_REC* rec, CONFIG_NODE* node) {
 
 	int legacy = config_node_get_bool(node, "legacy", FALSE);
 	rec->legacy = legacy;
+
+	int load_backlog = config_node_get_int(node, "load_backlog", 0);
+	rec->load_backlog = load_backlog;
+
+	int backlog_additional = config_node_get_int(node, "backlog_additional", FALSE);
+	rec->backlog_additional = backlog_additional;
+}
+
+void quassel_irssi_ready(void* _r) {
+	//We have full infos about which buffers are displayed
+	//Time to request backlog !
+	Quassel_SERVER_REC* r=(Quassel_SERVER_REC*)_r;
+
+	Quassel_CHATNET_REC *chatnet = (Quassel_CHATNET_REC*)chatnet_find(r->connrec->chatnet);
+	int policy = chatnet->load_backlog;
+	int additional = chatnet->backlog_additional;
+
+	if(policy == 0)
+		return;
+
+	int all = 0;
+	if(policy == 2)
+		all = 1;
+
+	quassel_irssi_request_backlogs(r->handle->handle, all, additional);
 }
 
 void quassel_cfg_init() {

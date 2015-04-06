@@ -111,6 +111,16 @@ void handle_backlog(struct message m, void *arg) {
 	quassel_irssi_backlog(arg, m.id, m.timestamp, m.buffer.id, m.buffer.network, m.buffer.name, m.sender, m.type, m.flags, m.content);
 }
 
+void quassel_irssi_request_backlogs(void* h, int all, int additional) {
+	for(int i=0;i<n_buffers;++i) {
+		if(buffers[i].i.id==(uint32_t)-1)
+			continue;
+		if(!all && !buffers[i].displayed)
+			continue;
+		quassel_request_backlog(h, buffers[i].i.id,
+				buffers[i].lastseen, -1, 150, additional);
+	}
+}
 
 static int initBufferStatus = 0;
 void handle_sync(void* irssi_arg, object_t o, function_t f, ...) {
