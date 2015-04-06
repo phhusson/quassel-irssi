@@ -19,8 +19,7 @@ Then:
     git submodule init
     git submodule update
     cd core
-    make
-    cp libquassel_core.so ~/.irssi/modules/
+    make user_install
 
 How to use
 ----------
