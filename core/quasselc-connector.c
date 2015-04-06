@@ -112,6 +112,7 @@ void handle_backlog(struct message m, void *arg) {
 }
 
 
+static int initBufferStatus = 0;
 void handle_sync(void* irssi_arg, object_t o, function_t f, ...) {
 	(void) o;
 	va_list ap;
@@ -173,6 +174,14 @@ void handle_sync(void* irssi_arg, object_t o, function_t f, ...) {
 			buffers[bufid].marker=msgid;
 			dprintf("%s(%d, %d)\n", fnc, bufid, msgid);
 			break;
+		case DoneBuffersInit: {
+			int info = va_arg(ap, int);
+			int o = initBufferStatus;
+			initBufferStatus |= info;
+			//Got both BufferViewConfig and BufferSyncer
+			if(initBufferStatus == 3 && initBufferStatus != o)
+				quassel_irssi_ready(irssi_arg);
+			} break;
 		/* IrcChannel */
 		case JoinIrcUsers:
 			net=va_arg(ap, char*);
@@ -269,6 +278,7 @@ void handle_event(void* arg, GIOChannel *h, event_t t, ...) {
 			break;
 
 		case SessionInit:
+			initBufferStatus = 0;
 			//Get buffers' display status
 			initRequest(h, "BufferViewConfig", "0");
 			//Retrieve marker lines and last seen msgs
