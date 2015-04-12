@@ -4,6 +4,7 @@ Bugs:
 -Without SSL(even with?), there might be a network deadlock when sending too many requests in a row.
 -Queries' buffers are opened only on first message, not on login
 -You can't create new query buffer, you can use only already existing ones
+-No SSL fingerprint checking
 
 Features:
 -Properly render backlog
