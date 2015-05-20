@@ -11,7 +11,8 @@ How to build
 ------------
 
 First install irssi-dev (on debian-based distributions) or irssi-devel (on rpm distributions),
-everything needed to compile C code, based on glib2 and git.
+everything needed to compile C code, based on glib2 and git. 
+You might also need SSL libs (libssl-dev on debian)
 Then:
 
     git clone https://github.com/phhusson/quassel-irssi.git
@@ -112,4 +113,11 @@ For instance on a debian/ubuntu:
 
     apt-get install build-essential libglib2.0-dev irssi-dev libssl-dev
 
+
+
+Additional notes
+----------------
+
+If you don't want to have your password in your config file, you can drop the password="" option and call:
+/server quassel-core.example.net 0 [yourpassword]
 
