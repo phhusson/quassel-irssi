@@ -136,3 +136,10 @@ void quassel_core_deinit(void) {
 	quassel_msgs_deinit();
 	quassel_cmds_deinit();
 }
+
+#ifdef IRSSI_ABI_VERSION
+void quassel_core_abicheck(int *version)
+{
+	    *version = IRSSI_ABI_VERSION;
+}
+#endif
