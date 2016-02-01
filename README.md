@@ -15,10 +15,8 @@ everything needed to compile C code, based on glib2 and git.
 You might also need SSL libs (libssl-dev on debian)
 Then:
 
-    git clone https://github.com/phhusson/quassel-irssi.git
-    cd quassel-irssi
-    git submodule init
-    git submodule update
+    git clone --recursive https://github.com/phhusson/quassel-irssi.git
+    cd quassel-irssi/core
     cd core
     make user_install
 
