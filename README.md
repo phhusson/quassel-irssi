@@ -17,7 +17,6 @@ Then:
 
     git clone --recursive https://github.com/phhusson/quassel-irssi.git
     cd quassel-irssi/core
-    cd core
     make user_install
 
 How to use
