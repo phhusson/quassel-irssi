@@ -71,6 +71,9 @@ extern void quassel_msgs_deinit(void);
 
 //quassel-core.c
 CHANNEL_REC *quassel_channel_create(SERVER_REC *server, const char *name, const char *visible_name, int automatic);
+#ifdef IRSSI_ABI_VERSION
+void quassel_core_abicheck(int *version);
+#endif
 
 //quassel-cmds.c
 extern void quassel_cmds_init(void);
