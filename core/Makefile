@@ -1,9 +1,10 @@
 INSTALL = install
 DESTDIR ?=
+LIBDIR ?= /usr/lib
 
 #IRSSI_INCLUDE:=/home/phh/irssi-0.8.16-rc1.phh/
 IRSSI_INCLUDE:=/usr/include/irssi/
-IRSSI_LIB?=$(DESTDIR)/usr/lib/irssi
+IRSSI_LIB?=$(DESTDIR)/$(LIBDIR)/irssi
 IRSSI_CFLAGS+=-I$(IRSSI_INCLUDE)/src/
 IRSSI_CFLAGS+=-I$(IRSSI_INCLUDE)/src/core/
 IRSSI_CFLAGS+=-I$(IRSSI_INCLUDE)/src/fe-common/
