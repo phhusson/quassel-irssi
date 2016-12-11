@@ -12,6 +12,8 @@ IRSSI_CFLAGS+=-I$(IRSSI_INCLUDE)/src/fe-common/core/
 IRSSI_CFLAGS+=-I$(IRSSI_INCLUDE)/src/fe-text/
 IRSSI_CFLAGS+=$(shell pkg-config glib-2.0 --cflags)
 IRSSI_CFLAGS+=-DUOFF_T_LONG -fPIC -DHAVE_OPENSSL
+SSL_CFLAGS=$(shell pkg-config --cflags openssl)
+SSL_LDLAGS=$(shell pkg-config --libs openssl)
 OBJECTS:=quasselc-connector.o quassel-core.o
 OBJECTS+=quassel-net.o quassel-msgs.o quassel-cmds.o
 OBJECTS+=irssi/network-openssl.o
@@ -27,6 +29,9 @@ else
 endif
 
 CFLAGS=-std=gnu11 -Wall -Wextra -Werror -g -O2 $(IRSSI_CFLAGS) $(QUASSELC_FLAGS) -Wmissing-prototypes -Wmissing-declarations
+
+CFLAGS += $(SSL_CFLAGS)
+LDFLAGS+= $(SSL_LDLAGS)
 
 TARGET=libquassel_core.so
 
