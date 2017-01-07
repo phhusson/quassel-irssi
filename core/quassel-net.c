@@ -89,8 +89,10 @@ void quassel_irssi_handle_connected(void* arg) {
 static void sig_connected(Quassel_SERVER_REC* r) {
 	if(!PROTO_CHECK_CAST(SERVER(r), Quassel_SERVER_REC, chat_type, "Quassel"))
 		return;
-	g_io_channel_set_encoding(r->handle->handle, NULL, NULL);
-	g_io_channel_set_buffered(r->handle->handle, FALSE);
+	if (g_io_channel_get_encoding(r->handle->handle) != NULL) {
+		g_io_channel_set_encoding(r->handle->handle, NULL, NULL);
+		g_io_channel_set_buffered(r->handle->handle, FALSE);
+	}
 
 	Quassel_CHATNET_REC *chatnet = (Quassel_CHATNET_REC*)chatnet_find(r->connrec->chatnet);
 	int legacy = chatnet->legacy;
