@@ -117,6 +117,10 @@ static const char *get_nick_flags(SERVER_REC *server) {
 	return "";
 }
 
+// IRSSI_ABI_VERSION was introduced in 0.8.18
+#if !defined(IRSSI_ABI_VERSION) || IRSSI_ABI_VERSION < 6
+#  define use_tls use_ssl
+#endif
 static SERVER_REC* quassel_server_init_connect(SERVER_CONNECT_REC* conn) {
 	Quassel_SERVER_CONNECT_REC *r = (Quassel_SERVER_CONNECT_REC*) conn;
 
@@ -132,10 +136,10 @@ static SERVER_REC* quassel_server_init_connect(SERVER_CONNECT_REC* conn) {
 	ret->got = 0;
 	server_connect_ref(SERVER_CONNECT(conn));
 
-	if(conn->use_ssl) {
+	if(conn->use_tls)
 		ret->ssl = 1;
-	}
-	ret->connrec->use_ssl = 0;
+
+	ret->connrec->use_tls = 0;
 
 	ret->channels_join = quassel_irssi_channels_join;
 	ret->send_message = quassel_irssi_send_message;
