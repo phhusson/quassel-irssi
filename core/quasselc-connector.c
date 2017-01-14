@@ -16,7 +16,7 @@
  */
 
 #define _GNU_SOURCE
-#include <asm/socket.h>
+#include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/wait.h>
