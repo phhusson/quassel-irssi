@@ -161,12 +161,59 @@ void quassel_net_init(CHAT_PROTOCOL_REC* rec) {
 	signal_add_first("server connected", (SIGNAL_FUNC) sig_connected);
 }
 
-GIOChannel *irssi_ssl_get_iochannel(GIOChannel *handle, int port, SERVER_REC *server);
+static void quassel_net_final_setup(SERVER_REC* server, GIOChannel *handle) {
+	quassel_login(handle, server->connrec->nick, server->connrec->password);
+	server->handle->handle = handle;
+
+	server->readtag =
+		g_input_add(handle,
+			    G_INPUT_READ,
+			    (GInputFunction) quassel_parse_incoming, server);
+}
+
+static void quassel_net_ssl_callback(SERVER_REC *server, GIOChannel *handle) {
+	int error;
+
+	g_return_if_fail(IS_SERVER(server));
+
+	error = irssi_ssl_handshake(handle);
+	if (error == -1) {
+		server->connection_lost = TRUE;
+		server_connect_failed(server, NULL);
+		return;
+	}
+	if (error & 1) {
+		if (server->connect_tag != -1)
+			g_source_remove(server->connect_tag);
+		server->connect_tag = g_input_add(handle, error == 1 ? G_INPUT_READ : G_INPUT_WRITE,
+						  (GInputFunction)
+						  quassel_net_ssl_callback,
+						  server);
+		return;
+	}
+
+	if (server->connect_tag != -1) {
+		g_source_remove(server->connect_tag);
+		server->connect_tag = -1;
+	}
+
+	quassel_net_final_setup(server, handle);
+}
+
 void quassel_irssi_init_ack(void *arg) {
 	Quassel_SERVER_REC *server = (Quassel_SERVER_REC*)arg;
-	if(!server->ssl)
-		goto login;
-	GIOChannel* ssl_handle = irssi_ssl_get_iochannel(server->handle->handle, 1337, SERVER(server));
+	GIOChannel* ssl_handle = net_start_ssl((SERVER_REC*)server);
+
+	if(server->readtag != -1) {
+		g_source_remove(server->readtag);
+		server->readtag = -1;
+	}
+
+	if(!server->ssl) {
+		quassel_net_final_setup((SERVER_REC*)server, server->handle->handle);
+		return;
+	}
+
 	int error;
 	//That's polling, and that's really bad...
 	while( (error=irssi_ssl_handshake(ssl_handle)) & 1) {
@@ -175,10 +222,7 @@ void quassel_irssi_init_ack(void *arg) {
 			return;
 		}
 	}
-	server->handle->handle = ssl_handle;
-
-login:
-	quassel_login(server->handle->handle, server->connrec->nick, server->connrec->password);
+	quassel_net_ssl_callback((SERVER_REC*)server, ssl_handle);
 }
 
 void quassel_irssi_init_nack(void *arg) {

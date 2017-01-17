@@ -16,7 +16,6 @@ SSL_CFLAGS=$(shell pkg-config --cflags openssl)
 SSL_LDLAGS=$(shell pkg-config --libs openssl)
 OBJECTS:=quasselc-connector.o quassel-core.o
 OBJECTS+=quassel-net.o quassel-msgs.o quassel-cmds.o
-OBJECTS+=irssi/network-openssl.o
 OBJECTS+=quassel-fe-window.o quassel-fe-level.o quassel-cfg.o
 
 LDFLAGS ?=
