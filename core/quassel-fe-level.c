@@ -62,6 +62,10 @@ static void sig_created(WINDOW_REC *winrec, int automatic) {
 		return;
 	}
 
+	if (!winrec->active_server) {
+		return;
+	}
+
 	CHANNEL_REC *_chanrec = channel_find(winrec->active_server, winrec->active->visible_name);
 	if(_chanrec->chat_type != Quassel_PROTOCOL)
 		return;
