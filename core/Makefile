@@ -28,7 +28,7 @@ else
     LDFLAGS += -lquasselc
 endif
 
-CFLAGS=-std=gnu11 -Wall -Wextra -Werror -g -O2 $(IRSSI_CFLAGS) $(QUASSELC_FLAGS) -Wmissing-prototypes -Wmissing-declarations
+CFLAGS=-std=gnu11 -Wall -Wextra -Werror -g -O2 $(IRSSI_CFLAGS) $(QUASSELC_FLAGS) -Wmissing-prototypes -Wmissing-declarations -Wno-cast-function-type
 
 CFLAGS += $(SSL_CFLAGS)
 LDFLAGS+= $(SSL_LDLAGS)
