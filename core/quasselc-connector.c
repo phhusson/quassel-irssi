@@ -16,7 +16,7 @@
  */
 
 #define _GNU_SOURCE
-#include <asm/socket.h>
+#include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/wait.h>
@@ -145,6 +145,7 @@ void handle_sync(void* irssi_arg, object_t o, function_t f, ...) {
 			highlight=0;
 			if(!fnc)
 				fnc="MarkBufferAsRead";
+		/* Falls through */
 		case Displayed:
 			if(!fnc)
 				fnc="BufferDisplayed";
@@ -155,6 +156,7 @@ void handle_sync(void* irssi_arg, object_t o, function_t f, ...) {
 		case Removed:
 			if(!fnc)
 				fnc="BufferRemoved";
+		/* Falls through */
 		case TempRemoved:
 			if(!fnc)
 				fnc="BufferTempRemoved";
@@ -210,6 +212,7 @@ void handle_sync(void* irssi_arg, object_t o, function_t f, ...) {
 		case AddUserMode:
 			if(!fnc)
 				fnc="AddUserMode";
+		/* Falls through */
 		case RemoveUserMode:
 			if(!fnc)
 				fnc="RemoveUserMode";
@@ -223,6 +226,7 @@ void handle_sync(void* irssi_arg, object_t o, function_t f, ...) {
 		case SetNick2:
 			if(!fnc)
 				fnc="SetNick";
+		/* Falls through */
 		case Quit:
 			if(!fnc)
 				fnc="Quit";
@@ -233,12 +237,15 @@ void handle_sync(void* irssi_arg, object_t o, function_t f, ...) {
 		case SetNick:
 			if(!fnc)
 				fnc="SetNick";
+		/* Falls through */
 		case SetServer:
 			if(!fnc)
 				fnc="SetServer";
+		/* Falls through */
 		case SetRealName:
 			if(!fnc)
 				fnc="SetRealName";
+		/* Falls through */
 		case PartChannel:
 			if(!fnc)
 				fnc="PartChannel";
